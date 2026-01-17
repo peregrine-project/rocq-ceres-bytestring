@@ -227,6 +227,14 @@ Definition is_printable (c : ascii) : bool :=
   && (c <=? "~")%char2 (* 126 = ~ *)
   ).
 
+(** Is a character part of a non-ascii utf-8 code point?
+  Doesn't check if it is a valid utf-8 byte sequence
+*)
+Definition is_utf_8 (c : ascii) : bool :=
+  (  ("128" <=? c)%char (* 0x80 *)
+  && (c <=? "244")%char (* 0xF4 *)
+  ).
+
 Definition is_whitespace (c : ascii) : bool :=
   match c with
   | " " | "010" | "013" => true
@@ -279,7 +287,7 @@ Fixpoint _escape_string (_end s : string) : string :=
     else if ("\" =? c)%char2 (* BACKSLASH *) then
       "\" :: "\" :: escaped_s'
     else
-      if is_printable c then
+      if is_printable c || is_utf_8 c then
         c :: escaped_s'
       else
         let n := nat_of_ascii c in
@@ -394,4 +402,3 @@ Delimit Scope dstring_scope with dstring.
 Bind Scope dstring_scope with DString.t.
 Notation "a ++ b" := (fun s => DString.app_string a (DString.app_string b s))
   : dstring_scope.
-

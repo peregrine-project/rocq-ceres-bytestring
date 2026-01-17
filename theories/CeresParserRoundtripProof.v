@@ -263,14 +263,18 @@ Proof.
 Qed.
 
 Lemma escape_string_regular c s
-  : is_printable c = true ->
+  : is_printable c = true \/ is_utf_8 c = true ->
     """"%char <> c ->
     "\"%char <> c ->
     (_escape_string "" s ++ c :: "")%string = _escape_string "" (s ++ c :: "").
 Proof.
   intros H1 H2 H3.
   induction s; cbn.
-  - match_ascii; try match_match; cbn; try (discriminate + contradiction + auto).
+  - match_ascii; try match_match; cbn; destruct H1; try (discriminate + contradiction + auto).
+    + apply Bool.orb_false_elim in H7 as [].
+      rewrite H7 in H1. discriminate.
+    + apply Bool.orb_false_elim in H7 as [].
+      rewrite H8 in H1. discriminate.
   - match_ascii; try match_match; cbn; rewrite IHs; reflexivity.
 Qed.
 
@@ -340,7 +344,7 @@ Proof.
 Qed.
 
 Lemma str_token_string_regular c tok s
-  : is_printable c = true ->
+  : is_printable c = true \/ is_utf_8 c = true ->
     """"%char <> c ->
     "\"%char <> c ->
     str_token_string tok EscNone s ->
@@ -616,7 +620,8 @@ Proof with (econstructor; cbn; eauto using more_ok_str_token with ceres).
   - match_ascii; try match_match; cbn; auto.
     + apply str_token_string_escape in H...
     + eauto using new_sexp_Str_sound.
-    + econstructor; eauto using more_ok_str_token, str_token_string_regular.
+    + apply Bool.orb_true_iff in H2.
+      econstructor; eauto using more_ok_str_token, str_token_string_regular.
       constructor. auto using str_token_string_regular.
 Qed.
 

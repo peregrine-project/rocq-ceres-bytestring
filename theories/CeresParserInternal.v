@@ -88,7 +88,7 @@ Definition next_str (i : parser_state) (p0 : loc) (tok : string) (e : escape) (p
   | EscNone =>
     if      "\"  =? c then ret tok EscBackslash
     else if """" =? c then inr (new_sexp d s (Atom (Str (string_reverse tok))) NoToken)
-    else if is_printable c then ret (c :: tok)%string EscNone
+    else if is_printable c || is_utf_8 c then ret (c :: tok)%string EscNone
     else inl (InvalidStringChar c p)
   end%char2.
 
