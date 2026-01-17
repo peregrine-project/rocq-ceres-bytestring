@@ -248,6 +248,20 @@ Proof.
   match_ascii; try match_match; cbn; rewrite IHs; reflexivity.
 Qed.
 
+Lemma escape_string_tab s
+  : (_escape_string "" s ++ "\t")%string = _escape_string "" (s ++ ("009" :: "")).
+Proof.
+  induction s; auto; cbn.
+  match_ascii; try match_match; cbn; rewrite IHs; reflexivity.
+Qed.
+
+Lemma escape_string_carriage_return s
+  : (_escape_string "" s ++ "\r")%string = _escape_string "" (s ++ ("013" :: "")).
+Proof.
+  induction s; auto; cbn.
+  match_ascii; try match_match; cbn; rewrite IHs; reflexivity.
+Qed.
+
 Lemma escape_string_regular c s
   : is_printable c = true ->
     """"%char <> c ->
@@ -297,6 +311,24 @@ Lemma str_token_string_dquote tok s
 Proof.
   inversion 1; cbn.
   rewrite string_app_assoc, escape_string_dquote, <- string_reverse_cons.
+  constructor.
+Qed.
+
+Lemma str_token_string_tab tok s
+  : str_token_string tok EscBackslash s ->
+    str_token_string ("009" :: tok) EscNone (s ++ "t").
+Proof.
+  inversion 1; cbn.
+  rewrite string_app_assoc, escape_string_tab, <- string_reverse_cons.
+  constructor.
+Qed.
+
+Lemma str_token_string_carriage_return tok s
+  : str_token_string tok EscBackslash s ->
+    str_token_string ("013" :: tok) EscNone (s ++ "r").
+Proof.
+  inversion 1; cbn.
+  rewrite string_app_assoc, escape_string_carriage_return, <- string_reverse_cons.
   constructor.
 Qed.
 
@@ -577,6 +609,8 @@ Proof with (econstructor; cbn; eauto using more_ok_str_token with ceres).
   destruct e, i as [d u ct].
   - match_ascii; cbn; auto.
     + apply str_token_string_newline in H...
+    + apply str_token_string_tab in H...
+    + apply str_token_string_carriage_return in H...
     + apply str_token_string_backslash in H...
     + apply str_token_string_dquote in H...
   - match_ascii; try match_match; cbn; auto.

@@ -80,6 +80,8 @@ Definition next_str (i : parser_state) (p0 : loc) (tok : string) (e : escape) (p
   match e with
   | EscBackslash =>
     if      "n"  =? c then ret ("010" :: tok)%string EscNone
+    else if "t"  =? c then ret ("009" :: tok)%string EscNone
+    else if "r"  =? c then ret ("013" :: tok)%string EscNone
     else if "\"  =? c then ret ("\" :: tok)%string EscNone
     else if """" =? c then ret ("""" :: tok)%string EscNone
     else inl (UnknownEscape p c)
