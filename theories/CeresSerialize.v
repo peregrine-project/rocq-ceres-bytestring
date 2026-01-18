@@ -4,8 +4,10 @@
 From Coq Require Import
   List
   ZArith
-  Ascii
-  String.
+  Strings.Byte
+(*   Ascii
+  String *).
+From MetaRocq.Utils Require Import bytestring.
 
 From Ceres Require Import
   CeresS
@@ -49,8 +51,8 @@ Global
 Instance Serialize_option {A} `(Serialize A) : Serialize (option A)
   := fun oa =>
     match oa with
-    | None => Atom "None"%string
-    | Some a => [ Atom "Some"%string ; to_sexp a ]%sexp
+    | None => Atom "None"%bs
+    | Some a => [ Atom "Some"%bs ; to_sexp a ]%sexp
     end.
 
 Global
@@ -58,8 +60,8 @@ Instance Serialize_sum {A B} `(Serialize A) `(Serialize B)
   : Serialize (A + B)
   := fun ab =>
     match ab with
-    | inl a => [ Atom "inl"%string ; to_sexp a ]%sexp
-    | inr b => [ Atom "inr"%string ; to_sexp b ]%sexp
+    | inl a => [ Atom "inl"%bs ; to_sexp a ]%sexp
+    | inr b => [ Atom "inr"%bs ; to_sexp b ]%sexp
     end.
 
 Global
@@ -73,11 +75,11 @@ Instance Serialize_Empty_set : Serialize Empty_set
 
 Global
 Instance Serialize_unit : Serialize unit
-  := fun _ => Atom "tt"%string.
+  := fun _ => Atom "tt"%bs.
 
 Global
-Instance Serialize_ascii : Serialize ascii
-  := fun a => Atom (Str (String a "")).
+Instance Serialize_byte : Serialize byte
+  := fun a => Atom (Str (String.String a ""%bs)).
 
 Global
 Instance Serialize_string : Serialize string

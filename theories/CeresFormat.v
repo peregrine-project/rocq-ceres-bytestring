@@ -1,7 +1,8 @@
 
 (* begin hide *)
 From Coq Require Import
-  List ZArith Ascii String.
+  List ZArith (* Ascii String *).
+From MetaRocq.Utils Require Import bytestring.
 
 From Ceres Require Import
   CeresString
@@ -14,18 +15,18 @@ Local Definition dstring_of_sexp {A} (dstring_A : A -> DString.t)
   := fix _to_dstring (x : sexp_ A) : DString.t :=
     match x with
     | Atom_ a => dstring_A a
-    | List nil => "()"%string
+    | List nil => "()"%bs
     | List (x :: xs) => fun s0 =>
         (  "("
         :: _to_dstring x
-             (fold_right (fun x => " "%char ++ _to_dstring x)%dstring
+             (fold_right (fun x => " "%byte ++ _to_dstring x)%dstring
                 (")" :: s0)
-                xs))%string
+                xs))%bs
     end%dstring.
 
 (** Convert a [sexp] to a [string]. *)
 Definition string_of_sexp_ {A} (string_A : A -> string) (x : sexp_ A) : string :=
-  dstring_of_sexp string_A x ""%string.
+  dstring_of_sexp string_A x ""%bs.
 
 (** Convert an [atom] to a [string]. *)
 Definition string_of_atom (a : atom) : string :=

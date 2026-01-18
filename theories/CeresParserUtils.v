@@ -1,4 +1,5 @@
-From Coq Require Import Bool NArith String Ascii.
+From Coq Require Import Bool NArith Strings.Byte (* String Ascii *).
+From MetaRocq.Utils Require Import bytestring.
 
 From Ceres Require Import CeresString.
 
@@ -13,11 +14,11 @@ Definition pretty_loc (p : loc) : string := string_of_N p.
 Variant error :=
 | UnmatchedClose : loc -> error
 | UnmatchedOpen : loc -> error
-| UnknownEscape : loc -> ascii -> error
+| UnknownEscape : loc -> byte -> error
 | UnterminatedString : loc -> error
 | EmptyInput : error
-| InvalidChar : ascii -> loc -> error
-| InvalidStringChar : ascii -> loc -> error
+| InvalidChar : byte -> loc -> error
+| InvalidStringChar : byte -> loc -> error
 .
 
 Definition pretty_error (e : error) :=
@@ -31,7 +32,7 @@ Definition pretty_error (e : error) :=
     "Invalid character " ++ escape_string (c :: "") ++ " at location " ++ pretty_loc p
   | InvalidStringChar c p =>
     "Invalid character inside string " ++ escape_string (c :: "") ++ " at location " ++ pretty_loc p
-  end%string.
+  end%bs.
 
-Definition is_atom_char (c : ascii) : bool :=
-  (is_alphanum c ||| string_elem c "'=-+*/:!?@#$%^&_<>.,|~").
+Definition is_atom_char (c : byte) : bool :=
+  (is_alphanum c ||| string_elem c "'=-+*/:!?@#$%^&_<>.,|~")%bs.

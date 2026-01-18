@@ -1,7 +1,8 @@
 (** * S-expression parser *)
 
 (* begin hide *)
-From Coq Require Import Bool List ZArith NArith Ascii String Decimal DecimalString.
+From Coq Require Import Bool List ZArith NArith Strings.Byte (* Ascii String *) Decimal DecimalString.
+From MetaRocq.Utils Require Import bytestring.
 
 From Ceres Require Import
   CeresS
@@ -13,7 +14,7 @@ Local Open Scope lazy_bool_scope.
 (* end hide *)
 
 (** Symbols on the stack *)
-Variant symbol : Set :=
+Variant symbol : Type :=
 | Open : loc -> symbol
 | Exp : sexp -> symbol
 .
@@ -69,7 +70,7 @@ Definition new_sexp {T : Set} (d : list sexp) (s : list symbol) (e : sexp) (t : 
   end.
 
 (** Parse next character of a string literal. *)
-Definition next_str (i : parser_state) (p0 : loc) (tok : string) (e : escape) (p : loc) (c : ascii)
+Definition next_str (i : parser_state) (p0 : loc) (tok : string) (e : escape) (p : loc) (c : byte)
   : error + parser_state :=
   let '{| parser_done := d; parser_stack := s |} := i in
   let ret (tok' : string) e' := inr
@@ -79,16 +80,16 @@ Definition next_str (i : parser_state) (p0 : loc) (tok : string) (e : escape) (p
     |} in
   match e with
   | EscBackslash =>
-    if      "n"  =? c then ret ("010" :: tok)%string EscNone
-    else if "t"  =? c then ret ("009" :: tok)%string EscNone
-    else if "r"  =? c then ret ("013" :: tok)%string EscNone
-    else if "\"  =? c then ret ("\" :: tok)%string EscNone
-    else if """" =? c then ret ("""" :: tok)%string EscNone
+    if      "n"  =? c then ret ("010" :: tok)%bs EscNone
+    else if "t"  =? c then ret ("009" :: tok)%bs EscNone
+    else if "r"  =? c then ret ("013" :: tok)%bs EscNone
+    else if "\"  =? c then ret ("\" :: tok)%bs EscNone
+    else if """" =? c then ret ("""" :: tok)%bs EscNone
     else inl (UnknownEscape p c)
   | EscNone =>
     if      "\"  =? c then ret tok EscBackslash
     else if """" =? c then inr (new_sexp d s (Atom (Str (string_reverse tok))) NoToken)
-    else if is_printable c || is_utf_8 c then ret (c :: tok)%string EscNone
+    else if is_printable c || is_utf_8 c then ret (c :: tok)%bs EscNone
     else inl (InvalidStringChar c p)
   end%char2.
 
@@ -101,7 +102,7 @@ Fixpoint _fold_stack (d : list sexp) (p : loc) (r : list sexp) (s : list symbol)
   end%list.
 
 (** Parse next character outside of a string literal. *)
-Definition next' {T} (i : parser_state_ T) (p : loc) (c : ascii)
+Definition next' {T} (i : parser_state_ T) (p : loc) (c : byte)
   : error + parser_state :=
   (if "(" =? c then inr
     {| parser_done := parser_done i
@@ -111,7 +112,7 @@ Definition next' {T} (i : parser_state_ T) (p : loc) (c : ascii)
   else if ")" =? c then
     _fold_stack (parser_done i) p nil (parser_stack i)
   else if """" =? c then
-    inr (set_cur_token i (StrToken p "" EscNone))
+    inr (set_cur_token i (StrToken p ""%bs EscNone))
   else if ";" =? c then
     inr (set_cur_token i Comment)
   else if is_whitespace c then
@@ -119,8 +120,8 @@ Definition next' {T} (i : parser_state_ T) (p : loc) (c : ascii)
   else inl (InvalidChar c p))%char2.
 
 (** Parse next character in a comment. *)
-Definition next_comment (i : parser_state) (c : ascii) : error + parser_state :=
-  if eqb_ascii "010" c then inr
+Definition next_comment (i : parser_state) (c : byte) : error + parser_state :=
+  if eqb_byte "010" c then inr
     {| parser_done := parser_done i
      ; parser_stack := parser_stack i
      ; parser_cur_token := NoToken
@@ -131,22 +132,22 @@ Definition next_comment (i : parser_state) (c : ascii) : error + parser_state :=
     [Raw] otherwise. *)
 Definition raw_or_num (s : string) : atom :=
   let s := string_reverse s in
-  match NilZero.int_of_string s with
+  match NilZero.int_of_string (String.to_string s) with
   | None => Raw s
   | Some n => Num (Z.of_int n)
   end.
 
 (** Consume one more character. *)
-Definition next (i : parser_state) (p : loc) (c : ascii) : error + parser_state :=
+Definition next (i : parser_state) (p : loc) (c : byte) : error + parser_state :=
   match parser_cur_token i with
   | StrToken p0 tok e => next_str i p0 tok e p c
   | NoToken =>
     if is_atom_char c
-    then inr (set_cur_token i (SimpleToken p (c :: "")))
+    then inr (set_cur_token i (SimpleToken p (c :: "")%bs))
     else next' i p c
   | SimpleToken _ tok =>
     if is_atom_char c
-    then inr (set_cur_token i (SimpleToken p (c :: tok)))
+    then inr (set_cur_token i (SimpleToken p (c :: tok)%bs))
     else
       let i' := new_sexp (parser_done i) (parser_stack i) (Atom (raw_or_num tok)) tt in
       next' i' p c
@@ -202,4 +203,4 @@ Fixpoint parse_sexps_ (i : parser_state) (p : loc) (s : string) : option error *
     | inl e => (Some e, p, i)
     | inr i => parse_sexps_ i (N.succ p) s
     end
-  end%string.
+  end%bs.

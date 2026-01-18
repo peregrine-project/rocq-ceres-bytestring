@@ -1,8 +1,10 @@
 From Coq Require Import
   ZArith
   List
-  Ascii
-  String.
+(*   Ascii
+  String *)
+  Strings.Byte.
+From MetaRocq.Utils Require Import bytestring.
 From Ceres Require Import
   CeresUtils
   CeresS
@@ -350,13 +352,13 @@ Proof.
 Qed.
 
 Global
-Instance CompleteClass_ascii : CompleteClass ascii.
+Instance CompleteClass_byte : CompleteClass byte.
 Proof.
   intros l a. reflexivity.
 Qed.
 
 Global
-Instance SoundClass_ascii : SoundClass ascii.
+Instance SoundClass_byte : SoundClass byte.
 Proof.
   intros l [ [ | s | ] | ]; cbn; try discriminate.
   destruct s as [ | ? [] ]; cbn; try discriminate.

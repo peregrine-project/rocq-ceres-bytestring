@@ -13,5 +13,5 @@
 (package
  (name coq-ceres)
  (synopsis "Library for serialization via S-expressions")
- (depends (coq (>= 8.8~)))
+ (depends (coq (>= 8.8~)) (rocq-metarocq-utils (>= 1.4~)))
 )

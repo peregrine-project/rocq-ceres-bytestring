@@ -4,8 +4,10 @@
 From Coq Require Import
   List
   ZArith
-  Ascii
-  String.
+  (* Ascii
+  String *)
+  Strings.Byte.
+From MetaRocq.Utils Require Import bytestring.
 
 From Ceres Require Import
   CeresUtils
@@ -26,7 +28,7 @@ Set Implicit Arguments.
 Definition loc : Set := list nat.
 
 (** Error messages. *)
-Inductive message : Set :=
+Inductive message : Type :=
 | MsgApp : message -> message -> message
 | MsgStr : string -> message
 | MsgSexp : sexp -> message
@@ -40,7 +42,7 @@ Coercion MsgStr : string >-> message.
 
 (** Prefix an error with some type information. *)
 Definition type_error (tyname : string) (msg : message) : message :=
-  "could not read type '"%string ++ tyname ++ "', "%string ++ msg.
+  "could not read type '"%bs ++ tyname ++ "', "%bs ++ msg.
 
 (** Errors which may occur when deserializing S-expressions. *)
 Variant error :=
@@ -97,10 +99,10 @@ Definition _con {A : Type} (tyname : string)
   fun l e =>
     match e with
     | List (Atom_ (Raw c) :: es) => f c l (type_error tyname) es
-    | List (_ :: _) => inl (DeserError (0 :: l) (type_error tyname "unexpected atom (expected constructor name)"%string))
-    | List nil => inl (DeserError l (type_error tyname "unexpected empty list"%string))
+    | List (_ :: _) => inl (DeserError (0 :: l) (type_error tyname "unexpected atom (expected constructor name)"%bs))
+    | List nil => inl (DeserError l (type_error tyname "unexpected empty list"%bs))
     | Atom_ (Raw c) => g c l
-    | Atom_ _ => inl (DeserError l (type_error tyname "unexpected atom (expected list or nullary constructor name)"%string))
+    | Atom_ _ => inl (DeserError l (type_error tyname "unexpected atom (expected list or nullary constructor name)"%bs))
     end.
 
 (** Deserialize with a custom function. *)
@@ -139,10 +141,10 @@ Definition match_con {A} (tyname : string)
       _find_or CeresString.eqb_string c c0 inr
         (let msg :=
            match all_con with
-           | nil => MsgStr "unexpected atom (expected list)"%string
+           | nil => MsgStr "unexpected atom (expected list)"%bs
            | _ =>
-             ("expected nullary constructor name, one of "%string ++ comma_sep all_con
-               ++ ", found "%string ++ c)%s_message
+             ("expected nullary constructor name, one of "%bs ++ comma_sep all_con
+               ++ ", found "%bs ++ c)%s_message
            end
          in inl (DeserError l (type_error tyname msg))))
     (fun c l err es =>
@@ -151,10 +153,10 @@ Definition match_con {A} (tyname : string)
         (fun (_ : unit) =>
           let msg :=
             match all_con with
-            | nil => MsgStr "unexpected atom"%string
+            | nil => MsgStr "unexpected atom"%bs
             | _ =>
-              ("expected constructor name, one of "%string ++ comma_sep all_con
-                ++ ", found "%string ++ c)%s_message
+              ("expected constructor name, one of "%bs ++ comma_sep all_con
+                ++ ", found "%bs ++ c)%s_message
             end
           in inl (DeserError l (type_error tyname msg))) tt).
 
@@ -167,8 +169,8 @@ Definition ret {R} (r : R) {n : nat} : FromSexpListN n n R :=
       | nil => inr r
       | _ =>
         let msg :=
-          ("too many fields, expected "%string ++ string_of_nat n
-            ++ ", got "%string ++ string_of_nat (n + List.length es))%s_message
+          ("too many fields, expected "%bs ++ string_of_nat n
+            ++ ", got "%bs ++ string_of_nat (n + List.length es))%s_message
         in inl (DeserError l (mk_error msg))
       end |}.
 
@@ -180,8 +182,8 @@ Definition bind_field {A B} (pa : FromSexp A)
       | e :: es => _bind_sum (pa (n :: l) e) (fun a => _fields (f a) l mk_error es)
       | nil =>
         let msg :=
-          ("not enough fields, expected "%string ++ string_of_nat m
-            ++ ", got only "%string ++ string_of_nat n)%s_message
+          ("not enough fields, expected "%bs ++ string_of_nat m
+            ++ ", got only "%bs ++ string_of_nat n)%s_message
         in inl (DeserError l (mk_error msg))
       end |}.
 
@@ -256,10 +258,10 @@ Instance Deserialize_SemiIntegral `{SemiIntegral A} : Deserialize A :=
     | Atom_ (Num n) =>
       match from_Z n with
       | Some a => inr a
-      | None => inl (DeserError l ("could not read integral type, invalid value "%string ++ MsgSexp e))
+      | None => inl (DeserError l ("could not read integral type, invalid value "%bs ++ MsgSexp e))
       end
-    | Atom_ _ => inl (DeserError l ("could not read integral type, got a non-Num atom "%string ++ MsgSexp e))
-    | List _ => inl (DeserError l "could not read integral type, got a list"%string)
+    | Atom_ _ => inl (DeserError l ("could not read integral type, got a non-Num atom "%bs ++ MsgSexp e))
+    | List _ => inl (DeserError l "could not read integral type, got a list"%bs)
     end.
 
 Global
@@ -277,23 +279,23 @@ Import ListNotations.
 
 Global
 Instance Deserialize_bool : Deserialize bool :=
-  Deser.match_con "bool"
+  Deser.match_con "bool"%bs
     [ ("false", false)
     ; ("true" , true)
-    ]%string [].
+    ]%bs [].
 
 Global
 Instance Deserialize_option {A} `{Deserialize A} : Deserialize (option A) :=
-  Deser.match_con "option"
-    [ ("None", None) ]%string
-    [ ("Some", Deser.con1_ Some) ]%string.
+  Deser.match_con "option"%bs
+    [ ("None", None) ]%bs
+    [ ("Some", Deser.con1_ Some) ]%bs.
 
 Global
 Instance Deserialize_sum {A B} `{Deserialize A} `{Deserialize B} : Deserialize (A + B) :=
-  Deser.match_con "sum" []
+  Deser.match_con "sum"%bs []
     [ ("inl", Deser.con1_ inl)
     ; ("inr", Deser.con1_ inr)
-    ]%string.
+    ]%bs.
 
 Global
 Instance Deserialize_prod {A B} `{Deserialize A} `{Deserialize B} : Deserialize (A * B) :=
@@ -303,21 +305,21 @@ Instance Deserialize_prod {A B} `{Deserialize A} `{Deserialize B} : Deserialize 
       _bind_sum (_from_sexp (0 :: l) e1) (fun a =>
       _bind_sum (_from_sexp (1 :: l) e2) (fun b =>
       inr (a, b)))
-    | List _ => inl (DeserError l "could not read 'prod', expected list of length 2, got list of a different length"%string)
-    | Atom_ _ => inl (DeserError l "could not read 'prod', expected list of length 2, got atom"%string)
+    | List _ => inl (DeserError l "could not read 'prod', expected list of length 2, got list of a different length"%bs)
+    | Atom_ _ => inl (DeserError l "could not read 'prod', expected list of length 2, got atom"%bs)
     end.
 
 Global
 Instance Deserialize_Empty_set : Deserialize Empty_set :=
-  fun l _ => inl (DeserError l "Tried to deserialize Empty_set"%string).
+  fun l _ => inl (DeserError l "Tried to deserialize Empty_set"%bs).
 
 Global
 Instance Deserialize_unit : Deserialize unit :=
   fun l e =>
     match e with
-    | Atom_ (Raw "tt") => inr tt
-    | Atom_ _ => inl (DeserError l "could not read 'unit', expected atom ""tt"", got a different atom"%string)
-    | List _ => inl (DeserError l "could not read 'unit', expected atom ""tt"", got a list"%string)
+    | Atom_ (Raw "tt"%bs) => inr tt
+    | Atom_ _ => inl (DeserError l "could not read 'unit', expected atom ""tt"", got a different atom"%bs)
+    | List _ => inl (DeserError l "could not read 'unit', expected atom ""tt"", got a list"%bs)
     end.
 
 Global
@@ -325,12 +327,12 @@ Instance Deserialize_string : Deserialize string :=
   fun l e =>
     match e with
     | Atom_ (Str s) => inr s
-    | Atom_ _ => inl (DeserError l "could not read 'string', got non-string atom"%string)
-    | List _ => inl (DeserError l "could not read 'string', got list"%string)
+    | Atom_ _ => inl (DeserError l "could not read 'string', got non-string atom"%bs)
+    | List _ => inl (DeserError l "could not read 'string', got list"%bs)
     end.
 
 Global
-Instance Deserialize_ascii : Deserialize ascii :=
+Instance Deserialize_byte : Deserialize byte :=
   fun l e =>
     match e with
     | Atom_ (Str (c :: "")) => inr c
@@ -339,7 +341,7 @@ Instance Deserialize_ascii : Deserialize ascii :=
       inl (DeserError l "could not read 'ascii', got string of length greater than 1")
     | Atom_ _ => inl (DeserError l "could not read 'ascii', got non-string atom")
     | List _ => inl (DeserError l "could not read 'ascii', got lost")
-    end%string.
+    end%bs.
 
 Fixpoint _sexp_to_list {A} (pa : FromSexp A) (xs : list A)
   (n : nat) (l : loc) (ys : list sexp) : error + list A :=
@@ -356,7 +358,7 @@ Global
 Instance Deserialize_list {A} `{Deserialize A} : Deserialize (list A) :=
   fun l e =>
     match e with
-    | Atom_ _ => inl (DeserError l "could not read 'list', got atom"%string)
+    | Atom_ _ => inl (DeserError l "could not read 'list', got atom"%bs)
     | List es => _sexp_to_list _from_sexp nil 0 l es
     end.
 

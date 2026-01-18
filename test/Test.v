@@ -1,8 +1,9 @@
-From Coq Require Import List NArith ZArith String.
+From Coq Require Import List NArith ZArith (* String *).
+From MetaRocq.Utils Require Import bytestring.
 From Ceres Require Import Ceres CeresParser CeresParserInternal.
 
 Import ListNotations.
-Local Open Scope string.
+Local Open Scope bs_scope.
 
 Definition s : unit + (nat * bool * unit) := inr (1, false, tt).
 Definition test_to_string_s : to_string s = "(inr ((1 false) tt))"
@@ -35,7 +36,7 @@ Proof. repeat constructor. Qed.
 Lemma roundtrip_s : roundtrip s.
 Proof. reflexivity. Qed.
 
-Require Import Ascii.
+Require Import Strings.Byte.
 
 Lemma parse_1 : parse_sexps "a" = inr [Atom "a"].
 Proof. reflexivity. Qed.

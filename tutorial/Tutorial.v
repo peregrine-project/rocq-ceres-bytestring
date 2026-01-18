@@ -2,11 +2,12 @@
 
 (** {{https://github.com/Lysxia/coq-ceres/tree/master/tutorial/Tutorial.v} Source of this file} *)
 
-From Coq Require Import List ZArith String.
+From Coq Require Import List ZArith (* String *).
+From MetaRocq.Utils Require Import bytestring.
 From Ceres Require Import Ceres.
 
 Import ListNotations.
-Local Open Scope string_scope.
+Local Open Scope bs_scope.
 
 (** ** Introduction *)
 
@@ -39,7 +40,7 @@ Your data types
 So S-expressions are trees of atoms.
 *)
 
-Check (sexp : Set).
+Check (sexp : Type).
 
 Check (Atom : atom -> sexp).
 Check (List : list sexp -> sexp).
@@ -80,7 +81,7 @@ Check (Raw : string -> atom).
 (** Note: [Raw] is a coercion, but [Str] is not (that would be ambiguous otherwise).
 Thus a [string] can be put anywhere an [atom] is expected. *)
 
-Check (Raw "example" = "example")%string.
+Check (Raw "example" = "example")%bs.
 
 (** *** Examples *)
 
