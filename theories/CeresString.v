@@ -1,7 +1,7 @@
 (** * String utilities *)
 
 (* begin hide *)
-From Coq Require Import
+From Stdlib Require Import
   Setoid
   Bool DecidableClass List Arith ZArith NArith Strings.Byte (* Ascii String *) Decimal DecimalString.
 From MetaRocq.Utils Require Import bytestring.
@@ -37,6 +37,7 @@ Definition compcomp (x y : comparison) : comparison :=
   | Gt => Gt
   end.
 
+Declare Scope compare_scope.
 Delimit Scope compare_scope with compare.
 Infix "::" := compcomp : compare_scope.
 
@@ -69,6 +70,7 @@ Definition leb_byte (a b : byte) : bool :=
   | _ => true
   end.
 
+Declare Scope char2_scope.
 Delimit Scope char2_scope with char2.
 Infix "=?" := eqb_byte : char2_scope.
 Infix "<=?" := leb_byte : char2_scope.
@@ -395,6 +397,7 @@ Coercion DString.of_string : string >-> DString.t.
 Coercion DString.of_byte : byte >-> DString.t.
 
 (* Declare Scope dstring_scope. *)
+Declare Scope dstring_scope.
 Delimit Scope dstring_scope with dstring.
 Bind Scope dstring_scope with DString.t.
 Notation "a ++ b" := (fun s => DString.app_string a (DString.app_string b s))

@@ -1,7 +1,7 @@
 (** * S-expressions *)
 
 (* begin hide *)
-From Coq Require Import
+From Stdlib Require Import
   DecidableClass List ZArith Strings.Byte (* Ascii String *).
 From MetaRocq.Utils Require Import bytestring.
 
@@ -21,6 +21,7 @@ Arguments Atom_ {A} a.
 Arguments List {A} xs.
 
 (* Declare Scope sexp_scope. *)
+Declare Scope sexp_scope.
 Delimit Scope sexp_scope with sexp.
 Bind Scope sexp_scope with sexp_.
 

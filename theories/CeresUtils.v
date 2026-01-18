@@ -1,5 +1,5 @@
 (* begin hide *)
-From Coq Require Import
+From Stdlib Require Import
   List.
 Import ListNotations.
 (* end hide *)

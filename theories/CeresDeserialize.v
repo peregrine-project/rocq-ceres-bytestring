@@ -1,7 +1,7 @@
 (** * Deserialization from S-expressions *)
 
 (* begin hide *)
-From Coq Require Import
+From Stdlib Require Import
   List
   ZArith
   (* Ascii
@@ -35,6 +35,7 @@ Inductive message : Type :=
 .
 
 (* Declare Scope s_msg_scope. *)
+Declare Scope s_msg_scope.
 Bind Scope s_msg_scope with message.
 Delimit Scope s_msg_scope with s_message.
 Infix "++" := MsgApp : s_msg_scope.
@@ -88,6 +89,7 @@ Record FromSexpListN (m n : nat) (A : Type) := {
 }.
 
 (* Declare Scope deser_scope. *)
+Declare Scope deser_scope.
 Delimit Scope deser_scope with deser.
 
 (** These combinators are meant to be used qualified. *)

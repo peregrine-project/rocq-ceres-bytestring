@@ -2,7 +2,7 @@
 
 (** {{https://github.com/Lysxia/coq-ceres/tree/master/tutorial/Tutorial.v} Source of this file} *)
 
-From Coq Require Import List ZArith (* String *).
+From Stdlib Require Import List ZArith (* String *).
 From MetaRocq.Utils Require Import bytestring.
 From Ceres Require Import Ceres.
 

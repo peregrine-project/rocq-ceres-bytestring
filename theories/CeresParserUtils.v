@@ -1,4 +1,4 @@
-From Coq Require Import Bool NArith Strings.Byte (* String Ascii *).
+From Stdlib Require Import Bool NArith Strings.Byte (* String Ascii *).
 From MetaRocq.Utils Require Import bytestring.
 
 From Ceres Require Import CeresString.

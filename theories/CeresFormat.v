@@ -1,6 +1,6 @@
 
 (* begin hide *)
-From Coq Require Import
+From Stdlib Require Import
   List ZArith (* Ascii String *).
 From MetaRocq.Utils Require Import bytestring.
 

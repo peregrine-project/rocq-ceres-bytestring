@@ -1,4 +1,4 @@
-From Coq Require Import NArith (* String *).
+From Stdlib Require Import NArith (* String *).
 From MetaRocq.Utils Require Import bytestring.
 
 From Ceres Require Import

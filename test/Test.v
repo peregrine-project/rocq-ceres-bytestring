@@ -1,4 +1,4 @@
-From Coq Require Import List NArith ZArith (* String *).
+From Stdlib Require Import List NArith ZArith (* String *).
 From MetaRocq.Utils Require Import bytestring.
 From Ceres Require Import Ceres CeresParser CeresParserInternal.
 
@@ -36,7 +36,7 @@ Proof. repeat constructor. Qed.
 Lemma roundtrip_s : roundtrip s.
 Proof. reflexivity. Qed.
 
-Require Import Strings.Byte.
+From Stdlib Require Import Strings.Byte.
 
 Lemma parse_1 : parse_sexps "a" = inr [Atom "a"].
 Proof. reflexivity. Qed.

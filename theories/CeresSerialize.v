@@ -1,7 +1,7 @@
 (** * Serialization to S-expressions *)
 
 (* begin hide *)
-From Coq Require Import
+From Stdlib Require Import
   List
   ZArith
   Strings.Byte

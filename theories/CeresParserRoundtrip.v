@@ -13,7 +13,7 @@
   depend on any proof details. The proofs are in [CeresParserRoundtripProof].
  *)
 
-From Coq Require Import
+From Stdlib Require Import
 (*   Ascii
   String *)
   List
