@@ -13,9 +13,8 @@
   depend on any proof details. The proofs are in [CeresParserRoundtripProof].
  *)
 
+(* begin hide *)
 From Stdlib Require Import
-(*   Ascii
-  String *)
   List
   ZArith
   DecimalString.
@@ -28,19 +27,21 @@ From CeresBS Require Import
 
 Import ListNotations.
 
+Local Open Scope bs_scope.
+Local Open Scope list_scope.
+(* end hide *)
+
+
+
 Module Token.
 
 Inductive t : Type :=
 | Open : t
 | Close : t
 | Atom (s : string) : t
-| Str (s : string) : t
-.
+| Str (s : string) : t.
 
 End Token.
-
-Local Open Scope bs_scope.
-Local Open Scope list_scope.
 
 
 (* * Lexer *)
@@ -112,8 +113,7 @@ Global Hint Constructors token_string : ceres.
 
 Inductive more_ok : bool -> string -> Prop :=
 | more_ok_false s : more_ok false s
-| more_ok_true c s : is_atom_char c = false -> more_ok true (c :: s)%bs
-.
+| more_ok_true c s : is_atom_char c = false -> more_ok true (c :: s)%bs.
 Global Hint Constructors more_ok : ceres.
 
 Lemma more_ok_nil_inv more : more_ok more "" -> more = false.
@@ -136,8 +136,7 @@ Qed.
 Inductive list_tokens {A B} (tks : A -> list B -> Prop) : list A -> list B -> Prop :=
 | list_tokens_nil : list_tokens tks [] []
 | list_tokens_cons x xs y ys
-  : tks x y -> list_tokens tks xs ys -> list_tokens tks (x :: xs) (y ++ ys)
-.
+  : tks x y -> list_tokens tks xs ys -> list_tokens tks (x :: xs) (y ++ ys).
 Global Hint Constructors list_tokens : ceres.
 
 (* Parser relation on atoms. Each atom is a single token. *)
@@ -154,8 +153,7 @@ Inductive sexp_tokens : sexp -> list Token.t -> Prop :=
 | sexp_tokens_Atom a t : atom_token a t -> sexp_tokens (Atom_ a) [t]
 | sexp_tokens_List es ts
   : list_tokens sexp_tokens es ts ->
-    sexp_tokens (List es) (Token.Open :: ts ++ [Token.Close])
-.
+    sexp_tokens (List es) (Token.Open :: ts ++ [Token.Close]).
 Global Hint Constructors sexp_tokens : ceres.
 
 (* Parser relation on lists of S-expressions (without the outer parentheses). *)

@@ -1,7 +1,6 @@
 
 (* begin hide *)
-From Stdlib Require Import
-  List ZArith (* Ascii String *).
+From Stdlib Require Import List.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import

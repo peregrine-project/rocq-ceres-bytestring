@@ -2,11 +2,13 @@
 
 (* begin hide *)
 From Stdlib Require Import
-  DecidableClass List ZArith Strings.Byte.
+  DecidableClass
+  List
+  ZArith
+  Strings.Byte.
 From MetaRocq.Utils Require Import bytestring.
 
-From CeresBS Require Import
-  CeresString.
+From CeresBS Require Import CeresString.
 
 Unset Elimination Schemes.
 (* end hide *)
@@ -14,8 +16,7 @@ Unset Elimination Schemes.
 (** S-expressions, parameterized by the type of atoms. *)
 Inductive sexp_ (A : Type) :=
 | Atom_ (a : A)
-| List (xs : list (sexp_ A))
-.
+| List (xs : list (sexp_ A)).
 
 Arguments Atom_ {A} a.
 Arguments List {A} xs.
@@ -57,8 +58,7 @@ Variant atom : Set :=
 | Num (n : Z)       (* Integers. *)
 | Str (s : string)  (* Literal strings. *)
 | Raw (s : string)  (* Simple atoms (e.g., ADT tags). *)
-                    (* Should fit in this alphabet: [A-Za-z0-9-_.']. *)
-.
+                    (* Should fit in this alphabet: [A-Za-z0-9-_.']. *).
 
 Notation sexp := (sexp_ atom).
 Notation Atom := (@Atom_ atom).  (* This notation helps make coercions work. *)

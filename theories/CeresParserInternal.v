@@ -1,7 +1,12 @@
 (** * S-expression parser *)
 
 (* begin hide *)
-From Stdlib Require Import Bool List ZArith NArith Strings.Byte (* Ascii String *) Decimal DecimalString.
+From Stdlib Require Import
+  Bool
+  List
+  ZArith
+  Strings.Byte
+  DecimalString.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
@@ -16,22 +21,19 @@ Local Open Scope lazy_bool_scope.
 (** Symbols on the stack *)
 Variant symbol : Type :=
 | Open : loc -> symbol
-| Exp : sexp -> symbol
-.
+| Exp : sexp -> symbol.
 
 (** When parsing strings, whether we are parsing an escape character. *)
 Variant escape : Set :=
 | EscBackslash
-| EscNone
-.
+| EscNone.
 
 (** Tokenizer state. *)
 Variant partial_token : Set :=
 | NoToken : partial_token
 | SimpleToken : loc -> string -> partial_token
 | StrToken : loc -> string -> escape -> partial_token
-| Comment : partial_token
-.
+| Comment : partial_token.
 
 Record parser_state_ {T : Type} : Type :=
   { parser_done : list sexp

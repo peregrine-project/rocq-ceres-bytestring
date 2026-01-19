@@ -1,13 +1,11 @@
+(* begin hide *)
 From Stdlib Require Import
-(*   Ascii
-  String *)
   Strings.Byte
   List
-  ZArith
+  NArith
   DecimalString.
 From MetaRocq.Utils Require Import bytestring.
 From CeresBS Require Import
-  CeresUtils
   CeresS
   CeresString
   CeresParser
@@ -16,6 +14,9 @@ From CeresBS Require Import
   CeresParserRoundtrip.
 
 Import ListNotations.
+(* end hide *)
+
+
 
 (* * Lemmas *)
 
@@ -139,19 +140,16 @@ Inductive stack_tokens : list symbol -> list Token.t -> Prop :=
 | stack_tokens_sexp e us ts ts0
   : sexp_tokens e ts0 ->
     stack_tokens us ts ->
-    stack_tokens (Exp e :: us) (ts ++ ts0)
-.
+    stack_tokens (Exp e :: us) (ts ++ ts0).
 Local Hint Constructors stack_tokens : ceres.
 
 Inductive stack_end_last : list symbol -> Prop :=
 | stack_end_last_last p : stack_end_last [Open p]
-| stack_end_last_cons u us : stack_end_last us -> stack_end_last (u :: us)
-.
+| stack_end_last_cons u us : stack_end_last us -> stack_end_last (u :: us).
 
 Inductive stack_end : list symbol -> Prop :=
 | stack_end_nil : stack_end []
-| stack_end_nonempty us : stack_end_last us -> stack_end us
-.
+| stack_end_nonempty us : stack_end_last us -> stack_end us.
 Local Hint Constructors stack_end : ceres.
 
 Lemma stack_end_cons v u us
@@ -209,8 +207,7 @@ Inductive str_token_string (tok : string) : escape -> string -> Prop :=
 | str_token_string_EscBackslash
   : str_token_string tok EscBackslash ("""" :: _escape_string "" (string_reverse tok) ++ "\")%bs
 | str_token_string_EscNone
-  : str_token_string tok EscNone ("""" :: _escape_string "" (string_reverse tok))%bs
-.
+  : str_token_string tok EscNone ("""" :: _escape_string "" (string_reverse tok))%bs.
 
 Lemma str_token_string_new : str_token_string ""%bs EscNone """"%bs.
 Proof. constructor. Qed.
@@ -370,8 +367,7 @@ Inductive partial_token_string : partial_token -> string -> Prop :=
     partial_token_string (StrToken p tok e) s'
 | partial_token_string_Comment s
   : no_newline s ->
-    partial_token_string Comment (";" :: s)%bs
-.
+    partial_token_string Comment (";" :: s)%bs.
 Local Hint Constructors partial_token_string : ceres.
 
 Inductive parser_state_string_
@@ -381,8 +377,7 @@ Inductive parser_state_string_
     list_sexp_tokens (rev d) ts00 ->
     stack_tokens u ts01 ->
     stack_end u ->
-    parser_state_string_ more d u s0
-.
+    parser_state_string_ more d u s0.
 Local Hint Constructors parser_state_string_ : ceres.
 
 Lemma parser_state_string_map d u more more' s0 s0'
@@ -399,8 +394,7 @@ Inductive parser_state_string (i : parser_state) : string -> Prop :=
   : parser_state_string_ more (parser_done i) (parser_stack i) s0 ->
     more_ok more s1 ->
     partial_token_string (parser_cur_token i) s1 ->
-    parser_state_string i (s0 ++ s1)%bs
-.
+    parser_state_string i (s0 ++ s1)%bs.
 Local Hint Constructors parser_state_string : ceres.
 
 Lemma more_ok_atom_inv more s

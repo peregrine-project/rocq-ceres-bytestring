@@ -1,10 +1,12 @@
-From Stdlib Require Import NArith (* String *).
+(* begin hide *)
+From Stdlib Require Import NArith.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
   CeresS
   CeresParserUtils
   CeresParserInternal.
+(* end hide *)
 
 (** Parse a string into a list of S-expressions. *)
 Definition parse_sexps (s : string) : error + list sexp :=

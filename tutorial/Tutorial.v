@@ -2,7 +2,7 @@
 
 (** {{https://github.com/Lysxia/coq-ceres/tree/master/tutorial/Tutorial.v} Source of this file} *)
 
-From Stdlib Require Import List ZArith (* String *).
+From Stdlib Require Import List ZArith.
 From MetaRocq.Utils Require Import bytestring.
 From CeresBS Require Import Ceres.
 
@@ -132,8 +132,7 @@ Inductive t : Set :=
 | Number : nat -> t
 | Bool : bool -> t
 | If : t -> t -> t -> t
-| Plus : t -> t -> t
-.
+| Plus : t -> t -> t.
 
 (** We define a [Serialize] and [Deserialize] instance to convert it to and
 from S-expressions. *)

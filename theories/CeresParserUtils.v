@@ -1,9 +1,15 @@
-From Stdlib Require Import Bool NArith Strings.Byte (* String Ascii *).
+(* begin hide *)
+From Stdlib Require Import
+  Bool
+  NArith
+  Strings.Byte.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import CeresString.
 
 Local Open Scope lazy_bool_scope.
+(* end hide *)
+
 
 (** Location in a string *)
 Definition loc : Set := N.
@@ -18,8 +24,7 @@ Variant error :=
 | UnterminatedString : loc -> error
 | EmptyInput : error
 | InvalidChar : byte -> loc -> error
-| InvalidStringChar : byte -> loc -> error
-.
+| InvalidStringChar : byte -> loc -> error.
 
 Definition pretty_error (e : error) :=
   match e with

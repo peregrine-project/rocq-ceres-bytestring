@@ -46,8 +46,7 @@ This library offers a type `sexp` with two constructors:
 ```coq
 Inductive sexp :=
 | Atom (a : atom)
-| List (xs : list sexp)
-.
+| List (xs : list sexp).
 ```
 
 Atoms are identifiers (`Raw`), numbers (`Num`) or strings (`Str`).
@@ -57,8 +56,7 @@ Variant atom : Set :=
 | Num (n : Z)       (* Integers. *)
 | Str (s : string)  (* Literal strings. *)
 | Raw (s : string)  (* Simple atoms (e.g., ADT tags). *)
-                    (* Should fit in this alphabet: [A-Za-z0-9'=+*/:!?@#$%^&<>.,|_~-]. *)
-.
+                    (* Should fit in this alphabet: [A-Za-z0-9'=+*/:!?@#$%^&<>.,|_~-]. *).
 ```
 
 Two classes `Serialize` and `Deserialize` are provided to define canonical
@@ -113,8 +111,7 @@ The type of S-expressions is actually parameterized by the type of atoms.
 ```coq
 Inductive sexp_ (A : Type) :=
 | Atom_ (a : A)
-| List (xs : list (sexp_ A))
-.
+| List (xs : list (sexp_ A)).
 ```
 
 By default, it is specialized to the `atom` type, so that the main S-expression type is

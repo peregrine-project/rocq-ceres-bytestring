@@ -1,8 +1,7 @@
+(* begin hide *)
 From Stdlib Require Import
   ZArith
   List
-(*   Ascii
-  String *)
   Strings.Byte.
 From MetaRocq.Utils Require Import bytestring.
 From CeresBS Require Import
@@ -12,6 +11,8 @@ From CeresBS Require Import
   CeresDeserialize.
 
 Import ListNotations.
+(* end hide *)
+
 
 (** Completeness: all values can be serialized without loss of information. *)
 Definition Complete {A : Type} (ser : A -> sexp) (de : sexp -> error + A) : Prop :=
@@ -210,8 +211,7 @@ Section DeRetField.
 Context {R} (r : R) {n : nat}.
 
 Inductive UnnilFields : R -> list sexp -> Prop :=
-| MkUnnilFields : UnnilFields r nil
-.
+| MkUnnilFields : UnnilFields r nil.
 
 Lemma sound_ret_field {a} l err es
   : inr a = _fields (@Deser.ret R r n) l err es ->
@@ -235,8 +235,7 @@ Inductive UnconsFields : list sexp -> Prop :=
 | MkUnconsFields a' e' es'
   : pa (n :: l) e' = inr a' ->
     inr a = _fields (f a') l err es' ->
-    UnconsFields (e' :: es')
-.
+    UnconsFields (e' :: es').
 
 Lemma sound_bind_field
   : inr a = _fields (Deser.bind_field pa f) l err es ->

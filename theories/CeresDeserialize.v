@@ -4,8 +4,6 @@
 From Stdlib Require Import
   List
   ZArith
-  (* Ascii
-  String *)
   Strings.Byte.
 From MetaRocq.Utils Require Import bytestring.
 
@@ -31,8 +29,7 @@ Definition loc : Set := list nat.
 Inductive message : Type :=
 | MsgApp : message -> message -> message
 | MsgStr : string -> message
-| MsgSexp : sexp -> message
-.
+| MsgSexp : sexp -> message.
 
 (* Declare Scope s_msg_scope. *)
 Declare Scope s_msg_scope.
@@ -48,8 +45,8 @@ Definition type_error (tyname : string) (msg : message) : message :=
 (** Errors which may occur when deserializing S-expressions. *)
 Variant error :=
 | ParseError : CeresParserUtils.error -> error     (* Errors from parsing [string -> sexp] *)
-| DeserError : loc -> message -> error   (* Errors from deserializing [sexp -> A] *)
-.
+| DeserError : loc -> message -> error.   (* Errors from deserializing [sexp -> A] *)
+
 
 (** ** Deserialization context *)
 
@@ -122,16 +119,15 @@ Definition as_fun {A} (f : loc -> sexp -> error + A) : FromSexp A := f.
 Inductive example A : Type :=
 | Ex0 : example A
 | Ex1 : A -> example A
-| Ex2 : A -> A -> example A
-.
+| Ex2 : A -> A -> example A.
 
 Instance Deserialize_example {A} `{Deserialize A} : Deserialize (example A) :=
   Deser.match_con "example"      (* Name of the type. *)
     [ ("Ex0", Ex0)               (* Nullary constructors in the first list: [("name", constructor)]. *)
-    ]%string
+    ]%bs
     [ ("Ex1", Deser.con1_ Ex1)   (* In the second list, [("name", conN_ constructor)] *)
     , ("Ex2", Deser.con2_ Ex2)   (* where [N] is the arity of [constructor]. *)
-    ]%string.
+    ]%bs.
 ]]
   *)
 Definition match_con {A} (tyname : string)

@@ -2,21 +2,26 @@
 
 (* begin hide *)
 From Stdlib Require Import
-  Setoid Bool DecidableClass List Arith ZArith
-  NArith Strings.Byte Decimal DecimalString.
+  Bool
+  DecidableClass
+  List
+  ZArith
+  Strings.Byte
+  DecimalString.
 From MetaRocq.Utils Require Import bytestring.
-From MetaRocq.Utils Require ByteCompare ByteCompareSpec.
+From MetaRocq.Utils Require
+  ByteCompare
+  ByteCompareSpec.
 
 Local Open Scope bs_scope.
-
 (* end hide *)
+
 
 (* Booleans *)
 
 Inductive reflect_eq {A} (x : A) : A -> bool -> Prop :=
 | reflect_eq_true : reflect_eq x x true
-| reflect_eq_false y : x <> y -> reflect_eq x y false
-.
+| reflect_eq_false y : x <> y -> reflect_eq x y false.
 
 (* [Bool.eqb_spec], which doesn't exist on Coq 8.8 *)
 Lemma eqb_eq_bool x y : reflect (x = y) (Bool.eqb x y).
