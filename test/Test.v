@@ -1,6 +1,6 @@
 From Stdlib Require Import List NArith ZArith (* String *).
 From MetaRocq.Utils Require Import bytestring.
-From Ceres Require Import Ceres CeresParser CeresParserInternal.
+From CeresBS Require Import Ceres CeresParser CeresParserInternal.
 
 Import ListNotations.
 Local Open Scope bs_scope.

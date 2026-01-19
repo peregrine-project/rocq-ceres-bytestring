@@ -4,7 +4,7 @@
 From Stdlib Require Import Bool List ZArith NArith Strings.Byte (* Ascii String *) Decimal DecimalString.
 From MetaRocq.Utils Require Import bytestring.
 
-From Ceres Require Import
+From CeresBS Require Import
   CeresS
   CeresString
   CeresParserUtils.

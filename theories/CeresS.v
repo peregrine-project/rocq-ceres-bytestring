@@ -2,10 +2,10 @@
 
 (* begin hide *)
 From Stdlib Require Import
-  DecidableClass List ZArith Strings.Byte (* Ascii String *).
+  DecidableClass List ZArith Strings.Byte.
 From MetaRocq.Utils Require Import bytestring.
 
-From Ceres Require Import
+From CeresBS Require Import
   CeresString.
 
 Unset Elimination Schemes.

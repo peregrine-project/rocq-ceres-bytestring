@@ -1,6 +1,5 @@
 (* begin hide *)
-From Stdlib Require Import
-  List.
+From Stdlib Require Import List.
 Import ListNotations.
 (* end hide *)
 

@@ -1,7 +1,7 @@
 (** * Main module *)
 
 (** Exported by default. *)
-From Ceres Require Export
+From CeresBS Require Export
   CeresS
   CeresSerialize
   CeresDeserialize

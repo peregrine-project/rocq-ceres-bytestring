@@ -5,7 +5,7 @@ From Stdlib Require Import
   String *)
   Strings.Byte.
 From MetaRocq.Utils Require Import bytestring.
-From Ceres Require Import
+From CeresBS Require Import
   CeresUtils
   CeresS
   CeresSerialize

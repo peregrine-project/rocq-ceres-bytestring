@@ -1,5 +1,5 @@
-From Ceres Require Import CeresParser.
-From Ceres Require Import Ceres.
+From CeresBS Require Import CeresParser.
+From CeresBS Require Import Ceres.
 
 From Coq Require Import List.
 Import ListNotations.

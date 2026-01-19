@@ -4,7 +4,7 @@
 
 From Stdlib Require Import List ZArith (* String *).
 From MetaRocq.Utils Require Import bytestring.
-From Ceres Require Import Ceres.
+From CeresBS Require Import Ceres.
 
 Import ListNotations.
 Local Open Scope bs_scope.

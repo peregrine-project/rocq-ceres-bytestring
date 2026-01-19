@@ -2,8 +2,8 @@
 
 (* begin hide *)
 From Stdlib Require Import
-  Setoid
-  Bool DecidableClass List Arith ZArith NArith Strings.Byte (* Ascii String *) Decimal DecimalString.
+  Setoid Bool DecidableClass List Arith ZArith
+  NArith Strings.Byte Decimal DecimalString.
 From MetaRocq.Utils Require Import bytestring.
 From MetaRocq.Utils Require ByteCompare ByteCompareSpec.
 

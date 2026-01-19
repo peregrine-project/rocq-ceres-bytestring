@@ -6,7 +6,7 @@ From Stdlib Require Import
   ZArith
   DecimalString.
 From MetaRocq.Utils Require Import bytestring.
-From Ceres Require Import
+From CeresBS Require Import
   CeresUtils
   CeresS
   CeresString

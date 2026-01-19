@@ -4,12 +4,10 @@
 From Stdlib Require Import
   List
   ZArith
-  Strings.Byte
-(*   Ascii
-  String *).
+  Strings.Byte.
 From MetaRocq.Utils Require Import bytestring.
 
-From Ceres Require Import
+From CeresBS Require Import
   CeresS
   CeresFormat
   CeresString.

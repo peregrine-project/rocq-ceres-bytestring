@@ -1,7 +1,7 @@
 From Stdlib Require Import Bool NArith Strings.Byte (* String Ascii *).
 From MetaRocq.Utils Require Import bytestring.
 
-From Ceres Require Import CeresString.
+From CeresBS Require Import CeresString.
 
 Local Open Scope lazy_bool_scope.
 

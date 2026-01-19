@@ -4,7 +4,7 @@ From Stdlib Require Import
   List ZArith (* Ascii String *).
 From MetaRocq.Utils Require Import bytestring.
 
-From Ceres Require Import
+From CeresBS Require Import
   CeresString
   CeresS.
 (* end hide *)

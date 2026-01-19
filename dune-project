@@ -1,6 +1,6 @@
 (lang dune 2.8)
 (using coq 0.2)
-(name coq-ceres)
+(name rocq-ceres-bytestring)
 (version dev)
 
 (generate_opam_files true)
@@ -11,7 +11,7 @@
 (maintainers "lysxia@gmail.com")
 
 (package
- (name coq-ceres)
+ (name rocq-ceres-bytestring)
  (synopsis "Library for serialization via S-expressions")
  (depends (coq (>= 9.0~)) (rocq-metarocq-utils (>= 1.4~)))
 )

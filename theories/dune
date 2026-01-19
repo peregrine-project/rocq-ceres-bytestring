@@ -1,4 +1,4 @@
 (coq.theory
-  (name Ceres)
-  (package coq-ceres)
+  (name CeresBS)
+  (package rocq-ceres-bytestring)
   (synopsis "Library for serialization to S-expressions"))
