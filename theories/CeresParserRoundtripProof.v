@@ -1,9 +1,11 @@
-From Coq Require Import
-  Ascii
-  String
+From Stdlib Require Import
+(*   Ascii
+  String *)
+  Strings.Byte
   List
   ZArith
   DecimalString.
+From MetaRocq.Utils Require Import bytestring.
 From Ceres Require Import
   CeresUtils
   CeresS
@@ -56,7 +58,7 @@ Proof.
 Qed.
 
 Lemma string_app_assoc (s0 s1 s2 : string)
-  : ((s0 ++ s1) ++ s2 = s0 ++ (s1 ++ s2))%string.
+  : ((s0 ++ s1) ++ s2 = s0 ++ (s1 ++ s2))%bs.
 Proof.
   induction s0; cbn; [ auto | rewrite IHs0; auto ].
 Qed.
@@ -64,7 +66,7 @@ Qed.
 Lemma after_atom_string_snoc c s s' more :
   is_atom_char c = false ->
   after_atom_string more s ->
-  after_atom_string false (s ++ c :: s').
+  after_atom_string false (s ++ c :: s')%bs.
 Proof.
   intros Hc []; constructor; auto.
 Qed.
@@ -72,24 +74,24 @@ Local Hint Resolve after_atom_string_snoc : ceres.
 
 Lemma token_string_open_snoc more ts s :
   token_string more ts s ->
-  token_string false (ts ++ [Token.Open]) (s ++ "(").
+  token_string false (ts ++ [Token.Open]) (s ++ "(")%bs.
 Proof.
-  induction 1; cbn; try rewrite (string_app_assoc _ _ "("%string); auto with ceres.
+  induction 1; cbn; try rewrite (string_app_assoc _ _ "("%bs); auto with ceres.
   eauto using token_string_atom with ceres.
 Qed.
 
 Lemma token_string_close_snoc more ts s :
   token_string more ts s ->
-  token_string false (ts ++ [Token.Close]) (s ++ ")").
+  token_string false (ts ++ [Token.Close]) (s ++ ")")%bs.
 Proof.
-  induction 1; cbn; try rewrite (string_app_assoc _ _ ")"%string); auto with ceres.
+  induction 1; cbn; try rewrite (string_app_assoc _ _ ")"%bs); auto with ceres.
   eauto using token_string_atom with ceres.
 Qed.
 
 Lemma token_string_atom_snoc ts s s1 :
   atom_string s1 ->
   token_string false ts s ->
-  token_string true (ts ++ [Token.Atom s1]) (s ++ s1).
+  token_string true (ts ++ [Token.Atom s1]) (s ++ s1)%bs.
 Proof.
   induction 2; cbn; try rewrite (string_app_assoc _ _ s1); auto with ceres.
   - rewrite <- string_app_nil_r at 2. apply token_string_atom; auto with ceres.
@@ -99,30 +101,30 @@ Qed.
 
 Lemma token_string_newline_snoc more s ts
   : token_string more ts s ->
-    token_string false ts (s ++ newline).
+    token_string false ts (s ++ newline)%bs.
 Proof.
   induction 1; cbn; try rewrite (string_app_assoc _ _ newline); auto with ceres.
-  - change newline with (newline ++ "")%string. apply token_string_spaces; constructor.
+  - change newline with (newline ++ "")%bs. apply token_string_spaces; constructor.
   - eauto with ceres.
 Qed.
 
 Lemma token_string_comment_snoc more s s_com ts
   : token_string more ts s ->
-    token_string false ts (s ++ ";" ++ s_com ++ newline).
+    token_string false ts (s ++ ";" ++ s_com ++ newline)%bs.
 Proof.
   induction 1; cbn; try rewrite string_app_assoc; auto with ceres.
-  - change newline with (newline ++ "")%string.
-    change (?x :: ?y ++ ?z)%string with ((x :: y) ++ z)%string; rewrite <- string_app_assoc.
+  - change newline with (newline ++ "")%bs.
+    change (?x :: ?y ++ ?z)%bs with ((x :: y) ++ z)%bs; rewrite <- string_app_assoc.
     apply token_string_comment; constructor.
   - eauto with ceres.
 Qed.
 
 Lemma token_string_string_snoc more s s_str ts
   : token_string more ts s ->
-    token_string false (ts ++ [Token.Str s_str]) (s ++ """" ++ _escape_string "" s_str ++ """").
+    token_string false (ts ++ [Token.Str s_str]) (s ++ """" ++ _escape_string "" s_str ++ """")%bs.
 Proof.
   induction 1; cbn; try rewrite string_app_assoc; auto with ceres.
-  - rewrite <- (string_app_nil_r (_ :: _)).
+  - rewrite <- (string_app_nil_r (_ :: _)%bs).
     do 2 (constructor; eauto with ceres).
   - eauto with ceres.
 Qed.
@@ -182,35 +184,35 @@ Definition escape_to_string (e : escape) : string :=
   match e with
   | EscBackslash => "\"
   | EscNone => ""
-  end.
+  end%bs.
 
 Definition no_newline (s : string) : Prop :=
   string_elem "010" s = false.
 
-Lemma is_atom_singleton (c : ascii)
-  : is_atom_char c = true -> atom_string (c :: "").
+Lemma is_atom_singleton (c : byte)
+  : is_atom_char c = true -> atom_string (c :: "")%bs.
 Proof. intros E; constructor; cbn; discriminate + rewrite E; reflexivity. Qed.
 Local Hint Resolve is_atom_singleton : ceres.
 
-Lemma is_atom_app (s : string) (c : ascii)
-  : atom_string s -> is_atom_char c = true -> atom_string (s ++ c :: "").
+Lemma is_atom_app (s : string) (c : byte)
+  : atom_string s -> is_atom_char c = true -> atom_string (s ++ c :: "")%bs.
 Proof.
   intros [_ Hs] Hc; constructor.
   - destruct s; discriminate.
   - revert Hs; unfold atom_string; induction s; cbn; intros.
     + rewrite Hc; auto.
-    + destruct (is_atom_char a); discriminate + rewrite IHs; auto.
+    + destruct (is_atom_char b); discriminate + rewrite IHs; auto.
 Qed.
 Local Hint Resolve is_atom_app : ceres.
 
 Inductive str_token_string (tok : string) : escape -> string -> Prop :=
 | str_token_string_EscBackslash
-  : str_token_string tok EscBackslash ("""" :: _escape_string "" (string_reverse tok) ++ "\")
+  : str_token_string tok EscBackslash ("""" :: _escape_string "" (string_reverse tok) ++ "\")%bs
 | str_token_string_EscNone
-  : str_token_string tok EscNone ("""" :: _escape_string "" (string_reverse tok))
+  : str_token_string tok EscNone ("""" :: _escape_string "" (string_reverse tok))%bs
 .
 
-Lemma str_token_string_new : str_token_string "" EscNone """".
+Lemma str_token_string_new : str_token_string ""%bs EscNone """"%bs.
 Proof. constructor. Qed.
 
 Lemma more_ok_str_token more tok e s
@@ -228,54 +230,72 @@ Ltac match_match :=
   end.
 
 Lemma escape_string_newline s
-  : (_escape_string "" s ++ "\n")%string = _escape_string "" (s ++ newline).
+  : (_escape_string "" s ++ "\n")%bs = _escape_string ""%bs (s ++ newline)%bs.
 Proof.
   induction s; auto; cbn.
-  match_ascii; try match_match; cbn; rewrite IHs; reflexivity.
+  match_byte; try match_match; cbn; rewrite IHs; reflexivity.
 Qed.
 
 Lemma escape_string_backslash s
-  : (_escape_string "" s ++ "\\")%string = _escape_string "" (s ++ "\").
+  : (_escape_string "" s ++ "\\")%bs = _escape_string ""%bs (s ++ "\")%bs.
 Proof.
   induction s; auto; cbn.
-  match_ascii; try match_match; cbn; rewrite IHs; reflexivity.
+  match_byte; try match_match; cbn; rewrite IHs; reflexivity.
 Qed.
 
 Lemma escape_string_dquote s
-  : (_escape_string "" s ++ "\""")%string = _escape_string "" (s ++ """").
+  : (_escape_string "" s ++ "\""")%bs = _escape_string ""%bs (s ++ """")%bs.
 Proof.
   induction s; auto; cbn.
-  match_ascii; try match_match; cbn; rewrite IHs; reflexivity.
+  match_byte; try match_match; cbn; rewrite IHs; reflexivity.
+Qed.
+
+Lemma escape_string_tab s
+  : (_escape_string "" s ++ "\t")%bs = _escape_string ""%bs (s ++ ("009" :: ""))%bs.
+Proof.
+  induction s; auto; cbn.
+  match_byte; try match_match; cbn; rewrite IHs; reflexivity.
+Qed.
+
+Lemma escape_string_carriage_return s
+  : (_escape_string "" s ++ "\r")%bs = _escape_string ""%bs (s ++ ("013" :: ""))%bs.
+Proof.
+  induction s; auto; cbn.
+  match_byte; try match_match; cbn; rewrite IHs; reflexivity.
 Qed.
 
 Lemma escape_string_regular c s
-  : is_printable c = true ->
-    """"%char <> c ->
-    "\"%char <> c ->
-    (_escape_string "" s ++ c :: "")%string = _escape_string "" (s ++ c :: "").
+  : is_printable c = true \/ is_utf_8 c = true ->
+    """"%byte <> c ->
+    "\"%byte <> c ->
+    (_escape_string "" s ++ c :: "")%bs = _escape_string ""%bs (s ++ c :: "")%bs.
 Proof.
   intros H1 H2 H3.
   induction s; cbn.
-  - match_ascii; try match_match; cbn; try (discriminate + contradiction + auto).
-  - match_ascii; try match_match; cbn; rewrite IHs; reflexivity.
+  - match_byte; try match_match; cbn; destruct H1; try (discriminate + contradiction + auto).
+    + apply Bool.orb_false_elim in H7 as [].
+      rewrite H7 in H1. discriminate.
+    + apply Bool.orb_false_elim in H7 as [].
+      rewrite H8 in H1. discriminate.
+  - match_byte; try match_match; cbn; rewrite IHs; reflexivity.
 Qed.
 
 Lemma _string_reverse_app s0 s1 s2
-  : _string_reverse (s1 ++ s0) s2 = (_string_reverse s1 s2 ++ s0)%string.
+  : _string_reverse (s1 ++ s0)%bs s2 = (_string_reverse s1 s2 ++ s0)%bs.
 Proof.
   revert s1; induction s2 as [ | c s2 IH ]; cbn; intros; auto.
-  exact (IH (c :: s1)%string).
+  exact (IH (c :: s1)%bs).
 Qed.
 
 Lemma string_reverse_cons c s
-  : string_reverse (c :: s) = (string_reverse s ++ c :: "")%string.
+  : string_reverse (c :: s)%bs = (string_reverse s ++ c :: "")%bs.
 Proof.
-  apply (_string_reverse_app (c :: "") "").
+  apply (_string_reverse_app (c :: "") "")%bs.
 Qed.
 
 Lemma str_token_string_newline tok s
   : str_token_string tok EscBackslash s ->
-    str_token_string ("010" :: tok) EscNone (s ++ "n").
+    str_token_string ("010" :: tok)%bs EscNone (s ++ "n")%bs.
 Proof.
   inversion 1; cbn.
   rewrite string_app_assoc, escape_string_newline, <- string_reverse_cons.
@@ -284,7 +304,7 @@ Qed.
 
 Lemma str_token_string_backslash tok s
   : str_token_string tok EscBackslash s ->
-    str_token_string ("\" :: tok) EscNone (s ++ "\").
+    str_token_string ("\" :: tok)%bs EscNone (s ++ "\")%bs.
 Proof.
   inversion 1; cbn.
   rewrite string_app_assoc, escape_string_backslash, <- string_reverse_cons.
@@ -293,26 +313,44 @@ Qed.
 
 Lemma str_token_string_dquote tok s
   : str_token_string tok EscBackslash s ->
-    str_token_string ("""" :: tok) EscNone (s ++ """").
+    str_token_string ("""" :: tok)%bs EscNone (s ++ """")%bs.
 Proof.
   inversion 1; cbn.
   rewrite string_app_assoc, escape_string_dquote, <- string_reverse_cons.
   constructor.
 Qed.
 
+Lemma str_token_string_tab tok s
+  : str_token_string tok EscBackslash s ->
+    str_token_string ("009" :: tok)%bs EscNone (s ++ "t")%bs.
+Proof.
+  inversion 1; cbn.
+  rewrite string_app_assoc, escape_string_tab, <- string_reverse_cons.
+  constructor.
+Qed.
+
+Lemma str_token_string_carriage_return tok s
+  : str_token_string tok EscBackslash s ->
+    str_token_string ("013" :: tok)%bs EscNone (s ++ "r")%bs.
+Proof.
+  inversion 1; cbn.
+  rewrite string_app_assoc, escape_string_carriage_return, <- string_reverse_cons.
+  constructor.
+Qed.
+
 Lemma str_token_string_escape tok s
   : str_token_string tok EscNone s ->
-    str_token_string tok EscBackslash (s ++ "\").
+    str_token_string tok EscBackslash (s ++ "\")%bs.
 Proof.
   inversion 1; cbn; constructor.
 Qed.
 
 Lemma str_token_string_regular c tok s
-  : is_printable c = true ->
-    """"%char <> c ->
-    "\"%char <> c ->
+  : is_printable c = true \/ is_utf_8 c = true ->
+    """"%byte <> c ->
+    "\"%byte <> c ->
     str_token_string tok EscNone s ->
-    str_token_string (c :: tok) EscNone (s ++ c :: "").
+    str_token_string (c :: tok)%bs EscNone (s ++ c :: "")%bs.
 Proof.
   inversion 4; cbn.
   rewrite escape_string_regular by auto.
@@ -322,7 +360,7 @@ Qed.
 
 Inductive partial_token_string : partial_token -> string -> Prop :=
 | partial_token_string_NoToken
-  : partial_token_string NoToken ""
+  : partial_token_string NoToken ""%bs
 | partial_token_string_SimpleToken p s s'
   : atom_string s' ->
     s' = string_reverse s ->
@@ -332,7 +370,7 @@ Inductive partial_token_string : partial_token -> string -> Prop :=
     partial_token_string (StrToken p tok e) s'
 | partial_token_string_Comment s
   : no_newline s ->
-    partial_token_string Comment (";" :: s)
+    partial_token_string Comment (";" :: s)%bs
 .
 Local Hint Constructors partial_token_string : ceres.
 
@@ -361,7 +399,7 @@ Inductive parser_state_string (i : parser_state) : string -> Prop :=
   : parser_state_string_ more (parser_done i) (parser_stack i) s0 ->
     more_ok more s1 ->
     partial_token_string (parser_cur_token i) s1 ->
-    parser_state_string i (s0 ++ s1)
+    parser_state_string i (s0 ++ s1)%bs
 .
 Local Hint Constructors parser_state_string : ceres.
 
@@ -382,7 +420,7 @@ Lemma new_sexp_Atom_sound d u s0 more
     (H : atom_string s')
     (H0 : s' = string_reverse s1')
     (i' := new_sexp d u (Atom (raw_or_num s1')) tt)
-  : parser_state_string_ true (parser_done i') (parser_stack i') (s0 ++ s').
+  : parser_state_string_ true (parser_done i') (parser_stack i') (s0 ++ s')%bs.
 Proof.
   unfold new_sexp in i'.
   assert (more = false) by eauto using more_ok_atom_inv; subst more.
@@ -410,12 +448,12 @@ Lemma new_sexp_List_sound d u s0 ts00 ts01 ts02 more
     (Hstack : stack_tokens u ts01)
     (Hstackend : stack_end u)
     (Hes : list_sexp_tokens es ts02)
-  : parser_state_string (new_sexp d u (List es) NoToken) (s0 ++ ")").
+  : parser_state_string (new_sexp d u (List es) NoToken) (s0 ++ ")")%bs.
 Proof.
   unfold new_sexp.
   destruct u.
   - inversion Hstack; subst; clear Hstack. cbn in Hs0.
-    rewrite <- (string_app_nil_r (_ ++ ")")).
+    rewrite <- (string_app_nil_r (_ ++ ")"))%bs.
     apply parser_state_string_mk with (more := false); cbn; auto with ceres.
     apply parser_state_string_mk_
       with (ts00 := ts00 ++ [Token.Open] ++ ts02 ++ [Token.Close]) (ts01 := []);
@@ -427,7 +465,7 @@ Proof.
     + apply list_sexp_tokens_app; auto.
       rewrite <- (app_nil_r (_ :: _ ++ _)).
       auto with ceres.
-  - rewrite <- (string_app_nil_r (_ ++ ")")).
+  - rewrite <- (string_app_nil_r (_ ++ ")"))%bs.
     econstructor; cbn; auto with ceres.
     apply parser_state_string_mk_
       with (ts00 := ts00) (ts01 := ts01 ++ [Token.Open] ++ ts02 ++ [Token.Close]);
@@ -443,9 +481,9 @@ Lemma new_sexp_Str_sound (d : list sexp) (u : list symbol) (more : bool)
     (H : str_token_string tok EscNone s')
   : parser_state_string
       (new_sexp d u (Atom (Str (string_reverse tok))) NoToken)
-      (s0 ++ s' ++ """").
+      (s0 ++ s' ++ """")%bs.
 Proof.
-  rewrite <- (string_app_nil_r (_ ++ _ ++ """")).
+  rewrite <- (string_app_nil_r (_ ++ _ ++ """"))%bs.
   unfold new_sexp.
   destruct Hi. inversion_clear H.
   destruct u.
@@ -480,7 +518,7 @@ Lemma _fold_stack_sound_
     (Hstackend : stack_end u)
     (Hes : list_sexp_tokens es ts02)
   , on_right (_fold_stack d p es u)
-      (fun i' : parser_state => parser_state_string i' (s0 ++ ")")).
+      (fun i' : parser_state => parser_state_string i' (s0 ++ ")"))%bs.
 Proof.
   induction u; cbn; auto; intros.
   destruct a; cbn.
@@ -501,7 +539,7 @@ Lemma _fold_stack_sound
     u
   : parser_state_string_ more d u s0 ->
     on_right (_fold_stack d p [] u)
-      (fun i' : parser_state => parser_state_string i' (s0 ++ ")")).
+      (fun i' : parser_state => parser_state_string i' (s0 ++ ")"))%bs.
 Proof.
   intros [ts00 ts01 ? ?]; apply _fold_stack_sound_
     with (more := more) (ts00 := ts00) (ts01 := ts01) (ts02 := []); auto with ceres.
@@ -511,10 +549,10 @@ Qed.
 Lemma token_string_spaces_app more ts s c
   : is_whitespace c = true ->
     token_string more ts s ->
-    token_string false ts (s ++ c :: "").
+    token_string false ts (s ++ c :: "")%bs.
 Proof.
   intros Hc; induction 1; cbn; try rewrite string_app_assoc; auto with ceres.
-  - apply token_string_spaces with (ws := (c :: "")%string); auto with ceres.
+  - apply token_string_spaces with (ws := (c :: "")%bs); auto with ceres.
     red; cbn; rewrite Hc; auto.
   - apply token_string_atom; auto with ceres.
     eauto using after_atom_string_snoc with ceres.
@@ -524,12 +562,12 @@ Lemma next_sound' {T} (i : parser_state_ T) (more : bool) s0 p c
   : parser_state_string_ more (parser_done i) (parser_stack i) s0 ->
     is_atom_char c = false ->
     on_right (next' i p c) (fun i' =>
-      parser_state_string i' (s0 ++ c :: "")).
+      parser_state_string i' (s0 ++ c :: ""))%bs.
 Proof.
   intros [ts00 ts01 Hs0 Hdone Hstack] IAC_c.
-  unfold next'; match_ascii; cbn.
+  unfold next'; match_byte; cbn.
   + (* "(" *)
-    rewrite <- (string_app_nil_r (_ ++ "(")).
+    rewrite <- (string_app_nil_r (_ ++ "("))%bs.
     apply parser_state_string_mk with (more := false); auto with ceres.
     apply parser_state_string_mk_
       with (ts00 := ts00) (ts01 := ts01 ++ [Token.Open]);
@@ -543,7 +581,7 @@ Proof.
     eapply parser_state_string_mk; cbn; eauto using more_ok_cons with ceres.
   + (* else *)
     destruct (is_whitespace y) eqn:Ews; cbn.
-    * rewrite <- (string_app_nil_r (_ ++ y :: "")).
+    * rewrite <- (string_app_nil_r (_ ++ y :: ""))%bs.
       eauto using token_string_spaces_app with ceres.
     * auto.
 Qed.
@@ -552,7 +590,7 @@ Lemma more_ok_atom more s c
   : more_ok more s ->
     atom_string s ->
     is_atom_char c = true ->
-    more_ok more (s ++ c :: "").
+    more_ok more (s ++ c :: "")%bs.
 Proof.
   intros []; cbn; auto with ceres.
 Qed.
@@ -560,35 +598,38 @@ Local Hint Resolve more_ok_atom : ceres.
 
 Lemma string_reverse_cons' c s s'
   : s' = string_reverse s ->
-    (s' ++ c :: "")%string = string_reverse (c :: s)%string.
+    (s' ++ c :: "")%bs = string_reverse (c :: s)%bs.
 Proof.
   intros; subst; symmetry; apply string_reverse_cons.
 Qed.
 
 Lemma next_str_sound
-    (i : parser_state) (p p1 : loc) (c : ascii) (e : escape)
+    (i : parser_state) (p p1 : loc) (c : byte) (e : escape)
     (more : bool) (s0 tok s' : string)
     (Hi : parser_state_string_ more (parser_done i) (parser_stack i) s0)
     (H : str_token_string tok e s')
   : on_right (next_str i p1 tok e p c)
-      (fun i' : parser_state => parser_state_string i' (s0 ++ s' ++ c :: "")).
+      (fun i' : parser_state => parser_state_string i' (s0 ++ s' ++ c :: ""))%bs.
 Proof with (econstructor; cbn; eauto using more_ok_str_token with ceres).
   unfold next_str.
   destruct e, i as [d u ct].
-  - match_ascii; cbn; auto.
+  - match_byte; cbn; auto.
     + apply str_token_string_newline in H...
+    + apply str_token_string_tab in H...
+    + apply str_token_string_carriage_return in H...
     + apply str_token_string_backslash in H...
     + apply str_token_string_dquote in H...
-  - match_ascii; try match_match; cbn; auto.
+  - match_byte; try match_match; cbn; auto.
     + apply str_token_string_escape in H...
     + eauto using new_sexp_Str_sound.
-    + econstructor; eauto using more_ok_str_token, str_token_string_regular.
+    + apply Bool.orb_true_iff in H2.
+      econstructor; eauto using more_ok_str_token, str_token_string_regular.
       constructor. auto using str_token_string_regular.
 Qed.
 
 Lemma next_comment_sound
     (i : parser_state)
-    (c : ascii)
+    (c : byte)
     (more : bool)
     (s0 : string)
     (Hi : parser_state_string_ more (parser_done i) (parser_stack i) s0)
@@ -596,11 +637,11 @@ Lemma next_comment_sound
     (s1 : string)
     (Hs : no_newline s1)
   : on_right (next_comment i c) (fun i' : parser_state =>
-      parser_state_string i' (s0 ++ ";" :: s1 ++ c :: "")).
+      parser_state_string i' (s0 ++ ";" :: s1 ++ c :: ""))%bs.
 Proof.
   unfold next_comment.
-  match_ascii; cbn.
-  - rewrite <- (string_app_nil_r (_ ++ _ :: _)).
+  match_byte; cbn.
+  - rewrite <- (string_app_nil_r (_ ++ _ :: _))%bs.
     econstructor; eauto using more_ok_cons with ceres.
     revert Hi.
     apply parser_state_string_map, token_string_comment_snoc.
@@ -613,7 +654,7 @@ Qed.
 Lemma next_sound i s p c
   : parser_state_string i s ->
     on_right (next i p c) (fun i' =>
-      parser_state_string i' (s ++ c :: "")).
+      parser_state_string i' (s ++ c :: ""))%bs.
 Proof.
   intros [more s0 s1 Hi Hmore Hcur].
   unfold next.
@@ -664,7 +705,7 @@ Lemma eof_sound
     (H : parser_state_string i s)
   : on_right (eof i p) (fun es : list sexp =>
       exists (ts : list Token.t),
-        list_sexp_tokens es ts /\ token_string false ts (s ++ newline)).
+        list_sexp_tokens es ts /\ token_string false ts (s ++ newline))%bs.
 Proof.
   unfold eof.
   destruct H as [ more s0 s1 H Hmore Hpartial ].
@@ -683,7 +724,7 @@ Lemma _parse_sexps_sound i p (s0 s : string)
     | (None, p', i') =>
       on_right (eof i' p') (fun es =>
         exists ts,
-          list_sexp_tokens es ts /\ token_string false ts (s0 ++ s ++ newline))
+          list_sexp_tokens es ts /\ token_string false ts (s0 ++ s ++ newline))%bs
     | (Some _, _, _) => True
     end.
 Proof.
@@ -700,9 +741,9 @@ Proof.
     eauto.
 Qed.
 
-Lemma parser_state_empty : parser_state_string initial_state "".
+Lemma parser_state_empty : parser_state_string initial_state ""%bs.
 Proof.
-  change ""%string with ("" ++ "")%string.
+  change ""%bs with ("" ++ "")%bs.
   repeat econstructor; cbn; auto with ceres.
 Qed.
 
@@ -711,6 +752,6 @@ Theorem parse_sexps_sound : PARSE_SEXPS_SOUND.
 Proof.
   red; intros.
   unfold parse_sexps.
-  pose proof (_parse_sexps_sound initial_state 0%N "" s parser_state_empty) as SOUND.
+  pose proof (_parse_sexps_sound initial_state 0%N ""%bs s parser_state_empty) as SOUND.
   destruct parse_sexps_ as [ [ [ | ] ] ? ]; cbn; auto.
 Qed.

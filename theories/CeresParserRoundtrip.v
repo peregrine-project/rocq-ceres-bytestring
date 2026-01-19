@@ -13,12 +13,13 @@
   depend on any proof details. The proofs are in [CeresParserRoundtripProof].
  *)
 
-From Coq Require Import
-  Ascii
-  String
+From Stdlib Require Import
+(*   Ascii
+  String *)
   List
   ZArith
   DecimalString.
+From MetaRocq.Utils Require Import bytestring.
 From Ceres Require Import
   CeresS
   CeresString
@@ -38,6 +39,10 @@ Inductive t : Type :=
 
 End Token.
 
+Local Open Scope bs_scope.
+Local Open Scope list_scope.
+
+
 (* * Lexer *)
 
 (* Here we specify how to convert strings of bytes to streams of tokens. *)
@@ -50,12 +55,11 @@ Definition whitespaces (s : string) : Prop :=
 (* [comment s] holds when [s] is a comment: starts with
    a semicolon [';'], ends with a newline ['\n']. *)
 Inductive comment : string -> Prop :=
-| comment_mk s : comment (";" :: s ++ newline)
-.
+| comment_mk s : comment (";" :: s ++ newline)%bs.
 
 (* [atom_string s] holds when [s] is an atom. *)
 Definition atom_string (s : string) : Prop :=
-  s <> ""%string /\ string_forall is_atom_char s = true.
+  s <> ""%bs /\ string_forall is_atom_char s = true.
 
 (* [after_atom_string false s] if the non-empty string [s] may appear right
    after an atom. This predicate is used to avoid ambiguity: two atoms
@@ -63,17 +67,16 @@ Definition atom_string (s : string) : Prop :=
    by a space, so [ab] is unambiguously one atom, not two separate atoms [a]
    and [b].  *)
 Inductive after_atom_string : bool -> string -> Prop :=
-| after_atom_nil : after_atom_string true ""
-| after_atom_cons c s more : is_atom_char c = false -> after_atom_string more (c :: s)
-.
+| after_atom_nil : after_atom_string true ""%bs
+| after_atom_cons c s more : is_atom_char c = false -> after_atom_string more (c :: s)%bs.
 Global Hint Constructors after_atom_string : ceres.
 
-Lemma after_atom_string_nil_inv more : after_atom_string more "" -> more = true.
+Lemma after_atom_string_nil_inv more : after_atom_string more ""%bs -> more = true.
 Proof.
   inversion 1; reflexivity.
 Qed.
 
-Lemma after_atom_string_cons more c s : is_atom_char c = false -> after_atom_string more (c :: s).
+Lemma after_atom_string_cons more c s : is_atom_char c = false -> after_atom_string more (c :: s)%bs.
 Proof.
   destruct more; auto with ceres.
 Qed.
@@ -82,7 +85,7 @@ Qed.
    (i.e., [s1] contains the bytes you would find in a file).
  *)
 Definition string_string (s0 : string) (s1 : string) : Prop :=
-  s1 = ("""" :: _escape_string "" s0 ++ """")%string.
+  s1 = ("""" :: _escape_string "" s0 ++ """")%bs.
 
 (* Lexer relation: [token_string more ts s] if the string [s] can be split into tokens [ts].
    - Handling of spaces and comments.
@@ -93,24 +96,23 @@ Definition string_string (s0 : string) (s1 : string) : Prop :=
 Inductive token_string (more : bool) : list Token.t -> string -> Prop :=
 | token_string_nil : token_string more [] ""
 | token_string_open ts s
-  : token_string more ts s -> token_string more (Token.Open :: ts) ("(" :: s)
+  : token_string more ts s -> token_string more (Token.Open :: ts) ("(" :: s)%bs
 | token_string_close ts s
-  : token_string more ts s -> token_string more (Token.Close :: ts) (")" :: s)
+  : token_string more ts s -> token_string more (Token.Close :: ts) (")" :: s)%bs
 | token_string_atom ts s1 s
   : atom_string s1 -> after_atom_string more s ->
-    token_string more ts s -> token_string more (Token.Atom s1 :: ts) (s1 ++ s)
+    token_string more ts s -> token_string more (Token.Atom s1 :: ts) (s1 ++ s)%bs
 | token_string_string ts s0 s1 s
-  : string_string s0 s1 -> token_string more ts s -> token_string more (Token.Str s0 :: ts) (s1 ++ s)
+  : string_string s0 s1 -> token_string more ts s -> token_string more (Token.Str s0 :: ts) (s1 ++ s)%bs
 | token_string_spaces ts ws s
-  : whitespaces ws -> token_string more ts s -> token_string more ts (ws ++ s)
+  : whitespaces ws -> token_string more ts s -> token_string more ts (ws ++ s)%bs
 | token_string_comment ts c s
-  : comment c -> token_string more ts s -> token_string more ts (c ++ s)
-.
+  : comment c -> token_string more ts s -> token_string more ts (c ++ s)%bs.
 Global Hint Constructors token_string : ceres.
 
 Inductive more_ok : bool -> string -> Prop :=
 | more_ok_false s : more_ok false s
-| more_ok_true c s : is_atom_char c = false -> more_ok true (c :: s)
+| more_ok_true c s : is_atom_char c = false -> more_ok true (c :: s)%bs
 .
 Global Hint Constructors more_ok : ceres.
 
@@ -119,7 +121,7 @@ Proof.
   inversion 1; reflexivity.
 Qed.
 
-Lemma more_ok_cons more c s : is_atom_char c = false -> more_ok more (c :: s).
+Lemma more_ok_cons more c s : is_atom_char c = false -> more_ok more (c :: s)%bs.
 Proof.
   destruct more; auto with ceres.
 Qed.
@@ -142,10 +144,9 @@ Global Hint Constructors list_tokens : ceres.
 Inductive atom_token : atom -> Token.t -> Prop :=
 | atom_token_Raw s : atom_token (Raw s) (Token.Atom s)
 | atom_token_Num s z
-  : NilZero.int_of_string s = Some z ->
+  : NilZero.int_of_string (String.to_string s) = Some z ->
     atom_token (Num (Z.of_int z)) (Token.Atom s)
-| atom_token_Str s : atom_token (Str s) (Token.Str s)
-.
+| atom_token_Str s : atom_token (Str s) (Token.Str s).
 Global Hint Constructors atom_token : ceres.
 
 (* Parser relation on S-expressions. This is the main definition of this file. *)
@@ -178,6 +179,6 @@ Definition on_right {A B} (x : A + B) (P : B -> Prop) : Prop :=
 Definition PARSE_SEXPS_SOUND : Prop :=
   forall (s : string) (es : list sexp),
     on_right (parse_sexps s) (fun es =>
-      exists ts, list_sexp_tokens es ts /\ token_string false ts (s ++ newline)).
+      exists ts, list_sexp_tokens es ts /\ token_string false ts (s ++ newline))%bs.
 
 (* TODO: Completeness *)

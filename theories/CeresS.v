@@ -1,8 +1,9 @@
 (** * S-expressions *)
 
 (* begin hide *)
-From Coq Require Import
-  DecidableClass List ZArith Ascii String.
+From Stdlib Require Import
+  DecidableClass List ZArith Strings.Byte (* Ascii String *).
+From MetaRocq.Utils Require Import bytestring.
 
 From Ceres Require Import
   CeresString.
@@ -20,6 +21,7 @@ Arguments Atom_ {A} a.
 Arguments List {A} xs.
 
 (* Declare Scope sexp_scope. *)
+Declare Scope sexp_scope.
 Delimit Scope sexp_scope with sexp.
 Bind Scope sexp_scope with sexp_.
 
@@ -116,7 +118,7 @@ Definition eqb_list {A B} (f : A -> B -> bool)
     | nil, nil => true
     | x :: xs, y :: ys => (f x y && eqb_list_ xs ys)%bool
     | _, _ => false
-    end.
+    end%list.
 
 Definition eqb_sexp_ {A B} (a_eqb : A -> B -> bool)
   : sexp_ A -> sexp_ B -> bool :=
@@ -142,9 +144,9 @@ Ltac magic :=
   simpl in *;
   repeat
     match goal with
-    | [ H : Forall _ (_ :: _) |- _ ] => inversion_clear H
+    | [ H : Forall _ (cons _ _) |- _ ] => inversion_clear H
     | [ |- andb _ _ = true ] => apply andb_true_intro
-    | [ H : ?x :: ?xs = ?y :: ?ys |- _ ] => inversion H; clear H; subst
+    | [ H : cons ?x ?xs = cons ?y ?ys |- _ ] => inversion H; clear H; subst
     | [ H : ?t = true |- _ ] =>
       match t with
       | andb _ _ => apply andb_prop in H; destruct H
@@ -219,7 +221,7 @@ Defined.
 Section Example.
 Import ListNotations.
 
-Local Open Scope string.
+Local Open Scope bs_scope.
 
 (** This S-expression:
 

@@ -9,7 +9,8 @@ homepage: "https://github.com/Lysxia/coq-ceres"
 bug-reports: "https://github.com/Lysxia/coq-ceres/issues"
 depends: [
   "dune" {>= "2.8"}
-  "coq" {>= "8.8~"}
+  "coq" {>= "9.0~"}
+  "rocq-metarocq-utils" {>= "1.4~"}
   "odoc" {with-doc}
 ]
 build: [

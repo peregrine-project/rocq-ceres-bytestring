@@ -33,3 +33,5 @@ nra.cache
 *Makefile.coq*
 doc/
 coqdocjs
+
+_build/
