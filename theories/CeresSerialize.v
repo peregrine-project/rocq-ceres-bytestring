@@ -5,6 +5,7 @@ From Stdlib Require Import
   List
   ZArith
   Strings.Byte.
+From Stdlib Require Uint63 Sint63.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
@@ -99,6 +100,12 @@ Instance Serialize_comparison : Serialize comparison
     | Lt => Atom "Lt"
     | Gt => Atom "Gt"
     end%bs.
+
+Global
+Instance Integral_uint : Integral PrimInt63.int := Uint63.to_Z.
+
+Global
+Instance Integral_sint : Integral PrimInt63.int := Sint63.to_Z.
 
 Global
 Instance Serialize_list {A} `{Serialize A} : Serialize (list A)

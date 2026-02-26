@@ -3,6 +3,7 @@ From Stdlib Require Import
   ZArith
   List
   Strings.Byte.
+From Stdlib Require Uint63.
 From MetaRocq.Utils Require Import bytestring.
 From CeresBS Require Import
   CeresUtils
@@ -480,4 +481,81 @@ Proof.
   intros l e a Ee; apply sound_match_con in Ee.
   destruct Ee as [ Ee | Ee ]; elim_Exists Ee;
     destruct Ee as [Eatom Ea]; subst; try reflexivity.
+Qed.
+
+Global
+Instance Complete_sint : @CompleteIntegral PrimInt63.int Integral_sint SemiIntegral_sint.
+Proof.
+  intros a. unfold from_Z, SemiIntegral_sint.
+  unfold to_Z, Integral_sint.
+  destruct andb eqn:H.
+  - apply Bool.andb_true_iff in H as [H1 H2].
+    apply Z.leb_le in H1.
+    apply Z.leb_le in H2.
+    rewrite Sint63.of_to_Z.
+    reflexivity.
+  - apply Bool.andb_false_iff in H as [H | H].
+    + apply Z.leb_nle in H.
+      specialize (Sint63.to_Z_bounded a) as H1.
+      destruct H1 as [H1 _].
+      contradiction.
+    + apply Z.leb_nle in H.
+      specialize (Sint63.to_Z_bounded a) as H1.
+      destruct H1 as [_ H1].
+      contradiction.
+Qed.
+
+Global
+Instance Complete_uint : @CompleteIntegral PrimInt63.int Integral_uint SemiIntegral_uint.
+Proof.
+  intros a. unfold from_Z, SemiIntegral_uint.
+  unfold to_Z, Integral_uint.
+  destruct andb eqn:H.
+  - apply Bool.andb_true_iff in H as [H1 H2].
+    apply Z.leb_le in H1.
+    apply Z.ltb_lt in H2.
+    rewrite Uint63.of_to_Z.
+    reflexivity.
+  - apply Bool.andb_false_iff in H as [H | H].
+    + apply Z.leb_nle in H.
+      specialize (Uint63.to_Z_rec_bounded Uint63.size a) as H1.
+      destruct H1 as [H1 _].
+      contradiction.
+    + apply Z.ltb_nlt in H.
+      specialize (Uint63.to_Z_rec_bounded Uint63.size a) as H1.
+      destruct H1 as [_ H1].
+      assert (H0 : Uint63Axioms.to_Z Uint63Axioms.digits = Z.of_nat Uint63Axioms.size).
+      { reflexivity. }
+      rewrite H0 in *; clear H0.
+      contradiction.
+Qed.
+
+Global
+Instance Sound_sint : @SoundIntegral PrimInt63.int Integral_sint SemiIntegral_sint.
+Proof.
+  intros z n. unfold from_Z, SemiIntegral_sint.
+  destruct andb eqn:H.
+  - intros E; injection E as <-.
+    apply Bool.andb_true_iff in H as [H1 H2].
+    apply Z.leb_le in H1.
+    apply Z.leb_le in H2.
+    rewrite <- Sint63.is_int.
+    reflexivity.
+    split; assumption.
+  - intros. discriminate.
+Qed.
+
+Global
+Instance Sound_uint : @SoundIntegral PrimInt63.int Integral_uint SemiIntegral_uint.
+Proof.
+  intros z n. unfold from_Z, SemiIntegral_uint.
+  destruct andb eqn:H.
+  - intros E; injection E as <-.
+    apply Bool.andb_true_iff in H as [H1 H2].
+    apply Z.leb_le in H1.
+    apply Z.ltb_lt in H2.
+    rewrite <- Uint63.is_int.
+    reflexivity.
+    split; assumption.
+  - intros. discriminate.
 Qed.

@@ -5,6 +5,7 @@ From Stdlib Require Import
   List
   ZArith
   Strings.Byte.
+From Stdlib Require Uint63 Sint63.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
@@ -717,6 +718,20 @@ Instance Deserialize_comparison : Deserialize comparison :=
     ("Lt", Lt);
     ("Gt", Gt)
   ]%bs [].
+
+Global
+Instance SemiIntegral_sint : SemiIntegral PrimInt63.int :=
+  fun n =>
+    if andb (Sint63.to_Z Sint63.min_int <=? n)%Z (n <=? Sint63.to_Z Sint63.max_int)%Z then
+      Some (Uint63.of_Z n)
+    else None.
+
+Global
+Instance SemiIntegral_uint : SemiIntegral PrimInt63.int :=
+  fun n =>
+    if andb (0 <=? n)%Z (n <? 2 ^ Uint63.to_Z Uint63.digits)%Z then
+      Some (Uint63.of_Z n)
+    else None.
 
 Fixpoint _sexp_to_list {A} (pa : FromSexp A) (xs : list A)
   (n : nat) (l : loc) (ys : list sexp) : error + list A :=
