@@ -682,6 +682,18 @@ Instance Deserialize_byte : Deserialize byte :=
   fun l e =>
     match e with
     | Atom_ (Str (c :: "")) => inr c
+    | Atom_ (Str "") => inl (DeserError l "could not read 'byte', got empty string")
+    | Atom_ (Str (_ :: _ :: _)) =>
+      inl (DeserError l "could not read 'byte', got string of length greater than 1")
+    | Atom_ _ => inl (DeserError l "could not read 'byte', got non-string atom")
+    | List _ => inl (DeserError l "could not read 'byte', got lost")
+    end%bs.
+
+Global
+Instance Deserialize_ascii : Deserialize Ascii.ascii :=
+  fun l e =>
+    match e with
+    | Atom_ (Str (c :: "")) => inr (Ascii.ascii_of_byte c)
     | Atom_ (Str "") => inl (DeserError l "could not read 'ascii', got empty string")
     | Atom_ (Str (_ :: _ :: _)) =>
       inl (DeserError l "could not read 'ascii', got string of length greater than 1")

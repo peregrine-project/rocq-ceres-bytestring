@@ -80,6 +80,10 @@ Instance Serialize_byte : Serialize byte
   := fun a => Atom (Str (String.String a ""%bs)).
 
 Global
+Instance Serialize_ascii : Serialize Ascii.ascii
+  := fun a => Atom (Str (String.String (Ascii.byte_of_ascii a) ""%bs)).
+
+Global
 Instance Serialize_string : Serialize string
   := fun s => Atom (Str s).
 

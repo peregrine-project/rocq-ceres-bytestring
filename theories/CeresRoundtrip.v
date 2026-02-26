@@ -390,3 +390,23 @@ Proof.
   destruct s; try discriminate.
   reflexivity.
 Qed.
+
+Global
+Instance CompleteClass_ascii : CompleteClass Ascii.ascii.
+Proof.
+  intros l a.
+  cbn.
+  rewrite Ascii.ascii_of_byte_of_ascii.
+  reflexivity.
+Qed.
+
+Global
+Instance SoundClass_ascii : SoundClass Ascii.ascii.
+Proof.
+  intros l [ [ | s | ] | ]; cbn; try discriminate.
+  destruct s as [ | ? [] ]; cbn; try discriminate.
+  intros ? E; injection E; intros [].
+  unfold to_sexp, Serialize_ascii.
+  rewrite Ascii.byte_of_ascii_of_byte.
+  reflexivity.
+Qed.
