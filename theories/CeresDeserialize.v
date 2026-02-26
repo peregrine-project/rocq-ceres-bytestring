@@ -710,6 +710,14 @@ Instance Deserialize_ascii : Deserialize Ascii.ascii :=
     | List _ => inl (DeserError l "could not read 'ascii', got lost")
     end%bs.
 
+Global
+Instance Deserialize_comparison : Deserialize comparison :=
+  Deser.match_con "comparison"%bs [
+    ("Eq", Eq);
+    ("Lt", Lt);
+    ("Gt", Gt)
+  ]%bs [].
+
 Fixpoint _sexp_to_list {A} (pa : FromSexp A) (xs : list A)
   (n : nat) (l : loc) (ys : list sexp) : error + list A :=
   match ys with

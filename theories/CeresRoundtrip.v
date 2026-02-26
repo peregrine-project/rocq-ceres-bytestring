@@ -466,3 +466,18 @@ Proof.
   intros l s v.
   destruct v.
 Qed.
+
+Global
+Instance CompleteClass_comparison : CompleteClass comparison.
+Proof.
+  unfold CompleteClass, Complete.
+  intros l []; reflexivity.
+Qed.
+
+Global
+Instance SoundClass_comparison : SoundClass comparison.
+Proof.
+  intros l e a Ee; apply sound_match_con in Ee.
+  destruct Ee as [ Ee | Ee ]; elim_Exists Ee;
+    destruct Ee as [Eatom Ea]; subst; try reflexivity.
+Qed.
