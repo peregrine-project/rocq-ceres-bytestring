@@ -733,6 +733,10 @@ Instance SemiIntegral_uint : SemiIntegral PrimInt63.int :=
       Some (Uint63.of_Z n)
     else None.
 
+Global
+Instance SemiIntegral_positive : SemiIntegral positive :=
+  fun n => if (n <=? 0)%Z then None else Some (Z.to_pos n).
+
 Fixpoint _sexp_to_list {A} (pa : FromSexp A) (xs : list A)
   (n : nat) (l : loc) (ys : list sexp) : error + list A :=
   match ys with

@@ -559,3 +559,25 @@ Proof.
     split; assumption.
   - intros. discriminate.
 Qed.
+
+Global
+Instance Complete_positive : CompleteIntegral positive.
+Proof.
+  intros a. unfold from_Z, SemiIntegral_positive.
+  unfold to_Z, Integral_positive.
+  replace (Z.leb _ _) with false.
+  - cbn. reflexivity.
+  - symmetry.
+    exact Zone_pos.
+Qed.
+
+Global
+Instance Sound_positive : SoundIntegral positive.
+Proof.
+  intros z n. unfold from_Z, SemiIntegral_positive.
+  destruct (Z.leb_spec z 0); try discriminate.
+  intros E; injection E as <-.
+  unfold to_Z, Integral_positive.
+  rewrite Z2Pos.id by assumption.
+  reflexivity.
+Qed.

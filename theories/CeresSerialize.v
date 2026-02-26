@@ -108,6 +108,9 @@ Global
 Instance Integral_sint : Integral PrimInt63.int := Sint63.to_Z.
 
 Global
+Instance Integral_positive : Integral positive := Zpos.
+
+Global
 Instance Serialize_list {A} `{Serialize A} : Serialize (list A)
   := fun xs => List (List.map to_sexp xs).
 
