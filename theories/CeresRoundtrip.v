@@ -452,3 +452,17 @@ Proof.
   rewrite Ascii.byte_of_ascii_of_byte.
   reflexivity.
 Qed.
+
+Global
+Instance CompleteClass_Empty_set : CompleteClass Empty_set.
+Proof.
+  intros l v.
+  destruct v.
+Qed.
+
+Global
+Instance SoundClass_Empty_set : SoundClass Empty_set.
+Proof.
+  intros l s v.
+  destruct v.
+Qed.
