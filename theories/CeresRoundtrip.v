@@ -363,3 +363,30 @@ Proof.
   destruct s as [ | ? [] ]; cbn; try discriminate.
   intros ? E; injection E; intros []; reflexivity.
 Qed.
+
+Global
+Instance Complete_unit : @CompleteClass unit Serialize_unit Deserialize_unit.
+Proof.
+  unfold CompleteClass, Complete.
+  intros l o.
+  cbn.
+  destruct o.
+  reflexivity.
+Qed.
+
+Global
+Instance Sound_unit : @SoundClass unit Serialize_unit Deserialize_unit.
+Proof.
+  unfold SoundClass, Sound.
+  intros l e a He.
+  unfold to_sexp, Serialize_unit.
+  unfold _from_sexp, Deserialize_unit in He.
+  destruct e; try discriminate.
+  destruct a0; try discriminate.
+  destruct s; try discriminate.
+  destruct b; try discriminate.
+  destruct s; try discriminate.
+  destruct b; try discriminate.
+  destruct s; try discriminate.
+  reflexivity.
+Qed.
