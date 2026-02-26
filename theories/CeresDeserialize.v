@@ -12,6 +12,7 @@ From CeresBS Require Import
   CeresS
   CeresParser
   CeresString.
+From CeresBS Require CeresFormat.
 
 Generalizable Variables A.
 
@@ -709,3 +710,30 @@ Instance Deserialize_list {A} `{Deserialize A} : Deserialize (list A) :=
 
 Global
 Instance Deserialize_sexp : Deserialize sexp := fun _ => inr.
+
+
+(* Pretty print deserialization error messages *)
+
+Definition string_of_loc (l : loc) : string := CeresString.comma_sep (List.map CeresString.string_of_nat l).
+
+Fixpoint string_of_message (print_sexp : bool) (m : message) : string :=
+  match m with
+  | MsgStr s => s
+  | MsgSexp e => if print_sexp then CeresFormat.string_of_sexp e else ""
+  | MsgApp m1 m2 =>
+    let m1_str := string_of_message print_sexp m1 in
+    let m2_str := string_of_message print_sexp m2 in
+    m1_str ++ m2_str
+  end%bs.
+
+Definition string_of_error (print_loc print_sexp : bool) (e : error) : string :=
+  match e with
+  (* Errors from parsing [string -> sexp] *)
+  | ParseError e => CeresParserUtils.pretty_error e
+  (* Errors from deserializing [sexp -> A] *)
+  | DeserError l m =>
+    let msg_str := string_of_message print_sexp m in
+    if print_loc
+    then msg_str ++ " at location " ++ string_of_loc l
+    else msg_str
+  end%bs.
