@@ -350,6 +350,48 @@ Proof.
   intros ? E; injection E; intros []; reflexivity.
 Qed.
 
+
+Lemma bytestring_sound : forall s,
+  bytestring.String.of_string (bytestring.String.to_string s) = s.
+Proof.
+  induction s.
+  - reflexivity.
+  - cbn.
+    rewrite IHs.
+    rewrite Ascii.byte_of_ascii_of_byte.
+    reflexivity.
+Qed.
+
+Lemma bytestring_complete : forall s,
+  bytestring.String.to_string (bytestring.String.of_string s) = s.
+Proof.
+  induction s.
+  - reflexivity.
+  - cbn.
+    rewrite IHs.
+    rewrite Ascii.ascii_of_byte_of_ascii.
+    reflexivity.
+Qed.
+
+Global
+Instance CompleteClass_coq_string : CompleteClass String.string.
+Proof.
+  intros l a.
+  cbn.
+  rewrite bytestring_complete.
+  reflexivity.
+Qed.
+
+Global
+Instance SoundClass_coq_string : SoundClass String.string.
+Proof.
+  intros l [ [] | ]; cbn; try discriminate.
+  intros ? E; injection E; intros [].
+  unfold to_sexp, Serialize_coq_string.
+  rewrite bytestring_sound.
+  reflexivity.
+Qed.
+
 Global
 Instance CompleteClass_byte : CompleteClass byte.
 Proof.

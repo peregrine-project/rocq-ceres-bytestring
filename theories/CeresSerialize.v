@@ -88,6 +88,10 @@ Instance Serialize_string : Serialize string
   := fun s => Atom (Str s).
 
 Global
+Instance Serialize_coq_string : Serialize String.string
+  := fun s => Atom (Str (String.of_string s)).
+
+Global
 Instance Serialize_list {A} `{Serialize A} : Serialize (list A)
   := fun xs => List (List.map to_sexp xs).
 

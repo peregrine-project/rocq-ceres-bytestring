@@ -678,6 +678,15 @@ Instance Deserialize_string : Deserialize string :=
     end.
 
 Global
+Instance Deserialize_coq_string : Deserialize String.string :=
+  fun l e =>
+    match e with
+    | Atom_ (Str s) => inr (String.to_string s)
+    | Atom_ _ => inl (DeserError l "could not read 'string', got non-string atom"%bs)
+    | List _ => inl (DeserError l "could not read 'string', got list"%bs)
+    end.
+
+Global
 Instance Deserialize_byte : Deserialize byte :=
   fun l e =>
     match e with
