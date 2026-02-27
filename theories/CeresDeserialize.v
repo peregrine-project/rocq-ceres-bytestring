@@ -696,7 +696,7 @@ Instance Deserialize_byte : Deserialize byte :=
     | Atom_ (Str (_ :: _ :: _)) =>
       inl (DeserError l "could not read 'byte', got string of length greater than 1")
     | Atom_ _ => inl (DeserError l "could not read 'byte', got non-string atom")
-    | List _ => inl (DeserError l "could not read 'byte', got lost")
+    | List _ => inl (DeserError l "could not read 'byte', got list")
     end%bs.
 
 Global
@@ -708,7 +708,7 @@ Instance Deserialize_ascii : Deserialize Ascii.ascii :=
     | Atom_ (Str (_ :: _ :: _)) =>
       inl (DeserError l "could not read 'ascii', got string of length greater than 1")
     | Atom_ _ => inl (DeserError l "could not read 'ascii', got non-string atom")
-    | List _ => inl (DeserError l "could not read 'ascii', got lost")
+    | List _ => inl (DeserError l "could not read 'ascii', got list")
     end%bs.
 
 Global
