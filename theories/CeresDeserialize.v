@@ -5,7 +5,7 @@ From Stdlib Require Import
   List
   ZArith
   Strings.Byte.
-From Stdlib Require Uint63 Sint63.
+From Stdlib Require Uint63 Sint63 SpecFloat.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
@@ -736,6 +736,15 @@ Instance SemiIntegral_uint : SemiIntegral PrimInt63.int :=
 Global
 Instance SemiIntegral_positive : SemiIntegral positive :=
   fun n => if (n <=? 0)%Z then None else Some (Z.to_pos n).
+
+Global
+Instance Deserialize_spec_float : Deserialize SpecFloat.spec_float :=
+  Deser.match_con "spec_float"%bs
+    [ ("S754_nan", SpecFloat.S754_nan) ]%bs
+    [ ("S754_zero", Deser.con1_ SpecFloat.S754_zero);
+      ("S754_infinity", Deser.con1_ SpecFloat.S754_infinity);
+      ("S754_finite", Deser.con3_ SpecFloat.S754_finite)
+    ]%bs.
 
 Fixpoint _sexp_to_list {A} (pa : FromSexp A) (xs : list A)
   (n : nat) (l : loc) (ys : list sexp) : error + list A :=

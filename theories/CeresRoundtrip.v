@@ -3,11 +3,12 @@ From Stdlib Require Import
   ZArith
   List
   Strings.Byte.
-From Stdlib Require Uint63.
+From Stdlib Require Uint63 Sint63 SpecFloat.
 From MetaRocq.Utils Require Import bytestring.
 From CeresBS Require Import
   CeresUtils
   CeresS
+  CeresString
   CeresSerialize
   CeresDeserialize.
 
@@ -580,4 +581,56 @@ Proof.
   unfold to_Z, Integral_positive.
   rewrite Z2Pos.id by assumption.
   reflexivity.
+Qed.
+
+Global
+Instance CompleteClass_spec_float : CompleteClass SpecFloat.spec_float.
+Proof.
+  unfold CompleteClass, Complete.
+  intros l [];
+    unfold _from_sexp; cbn -[_from_sexp].
+  - rewrite !eqb_byte_refl.
+    rewrite complete_class.
+    reflexivity.
+  - rewrite !eqb_byte_refl.
+    rewrite !neqb_byte_neq by congruence.
+    rewrite complete_class.
+    reflexivity.
+  - cbn.
+    rewrite !eqb_byte_refl.
+    reflexivity.
+  - rewrite !eqb_byte_refl.
+    rewrite !neqb_byte_neq by congruence.
+    rewrite !complete_class.
+    reflexivity.
+Qed.
+
+Global
+Instance SoundClass_spec_float : SoundClass SpecFloat.spec_float.
+Proof.
+  intros l e a Ee; apply sound_match_con in Ee.
+  destruct Ee as [ Ee | Ee ]; elim_Exists Ee; cbn [fst snd] in *.
+  - destruct Ee as [E1 E2]; subst; reflexivity.
+  - destruct Ee as [es [<- Ea]].
+    sound_field Ea.
+    apply sound_class in Ea1.
+    cbn.
+    rewrite Ea1.
+    reflexivity.
+  - destruct Ee as [es [<- Ea]].
+    sound_field Ea.
+    apply sound_class in Ea1.
+    cbn.
+    rewrite Ea1.
+    reflexivity.
+  - destruct Ee as [es [<- Ea]].
+    sound_field Ea.
+    apply sound_class in Ea0.
+    apply sound_class in Ea1.
+    apply sound_class in Ea2.
+    cbn.
+    rewrite Ea0.
+    rewrite Ea1.
+    rewrite Ea2.
+    reflexivity.
 Qed.

@@ -5,7 +5,7 @@ From Stdlib Require Import
   List
   ZArith
   Strings.Byte.
-From Stdlib Require Uint63 Sint63.
+From Stdlib Require Uint63 Sint63 SpecFloat.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
@@ -109,6 +109,16 @@ Instance Integral_sint : Integral PrimInt63.int := Sint63.to_Z.
 
 Global
 Instance Integral_positive : Integral positive := Zpos.
+
+Global
+Instance Serialize_spec_float : Serialize SpecFloat.spec_float :=
+  fun f =>
+    match f with
+    | SpecFloat.S754_zero s => [ Atom "S754_zero"; to_sexp s ]%sexp
+    | SpecFloat.S754_infinity s => [ Atom "S754_infinity"; to_sexp s ]%sexp
+    | SpecFloat.S754_nan => Atom "S754_nan"
+    | SpecFloat.S754_finite s m e => [ Atom "S754_finite"; to_sexp s; to_sexp m; to_sexp e ]%sexp
+    end%bs.
 
 Global
 Instance Serialize_list {A} `{Serialize A} : Serialize (list A)
