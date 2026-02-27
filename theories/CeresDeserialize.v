@@ -5,7 +5,7 @@ From Stdlib Require Import
   List
   ZArith
   Strings.Byte.
-From Stdlib Require Uint63 Sint63 SpecFloat.
+From Stdlib Require Uint63 Sint63 SpecFloat PrimFloat FloatOps FloatAxioms.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
@@ -745,6 +745,18 @@ Instance Deserialize_spec_float : Deserialize SpecFloat.spec_float :=
       ("S754_infinity", Deser.con1_ SpecFloat.S754_infinity);
       ("S754_finite", Deser.con3_ SpecFloat.S754_finite)
     ]%bs.
+
+Global
+Instance Deserialize_prim_float : Deserialize PrimFloat.float :=
+  fun l e =>
+    match Deserialize_spec_float l e with
+    | inl e => inl e
+    | inr f =>
+      if FloatAxioms.valid_binary f
+      then inr (FloatOps.SF2Prim f)
+      else inl (DeserError l "invalid float")%bs
+    end.
+
 
 Fixpoint _sexp_to_list {A} (pa : FromSexp A) (xs : list A)
   (n : nat) (l : loc) (ys : list sexp) : error + list A :=

@@ -3,7 +3,7 @@ From Stdlib Require Import
   ZArith
   List
   Strings.Byte.
-From Stdlib Require Uint63 Sint63 SpecFloat.
+From Stdlib Require Uint63 Sint63 SpecFloat PrimFloat FloatOps FloatAxioms.
 From MetaRocq.Utils Require Import bytestring.
 From CeresBS Require Import
   CeresUtils
@@ -633,4 +633,32 @@ Proof.
     rewrite Ea1.
     rewrite Ea2.
     reflexivity.
+Qed.
+
+Global
+Instance CompleteClass_prim_float : CompleteClass PrimFloat.float.
+Proof.
+  unfold CompleteClass, Complete.
+  intros.
+  unfold _from_sexp, Deserialize_prim_float.
+  specialize CompleteClass_spec_float as H.
+  unfold CompleteClass, Complete, _from_sexp in H.
+  unfold to_sexp, Serialize_prim_float.
+  rewrite H.
+  rewrite FloatAxioms.Prim2SF_valid.
+  rewrite FloatAxioms.SF2Prim_Prim2SF.
+  reflexivity.
+Qed.
+
+Global
+Instance SoundClass_prim_float : SoundClass PrimFloat.float.
+Proof.
+  intros l e a Ee.
+  unfold _from_sexp, Deserialize_prim_float in Ee.
+  destruct Deserialize_spec_float eqn:H in Ee; try discriminate.
+  apply sound_class in H.
+  destruct SpecFloat.valid_binary eqn:Hvalid in Ee; try discriminate.
+  injection Ee as <-.
+  unfold to_sexp, Serialize_prim_float.
+  rewrite FloatAxioms.Prim2SF_SF2Prim; auto.
 Qed.

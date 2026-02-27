@@ -5,7 +5,7 @@ From Stdlib Require Import
   List
   ZArith
   Strings.Byte.
-From Stdlib Require Uint63 Sint63 SpecFloat.
+From Stdlib Require Uint63 Sint63 SpecFloat PrimFloat FloatOps.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
@@ -119,6 +119,10 @@ Instance Serialize_spec_float : Serialize SpecFloat.spec_float :=
     | SpecFloat.S754_nan => Atom "S754_nan"
     | SpecFloat.S754_finite s m e => [ Atom "S754_finite"; to_sexp s; to_sexp m; to_sexp e ]%sexp
     end%bs.
+
+Global
+Instance Serialize_prim_float : Serialize PrimFloat.float :=
+  fun f => to_sexp (FloatOps.Prim2SF f).
 
 Global
 Instance Serialize_list {A} `{Serialize A} : Serialize (list A)
