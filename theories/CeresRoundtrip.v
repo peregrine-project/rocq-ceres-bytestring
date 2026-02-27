@@ -704,4 +704,53 @@ Module StrongSound.
       assumption.
     - assumption.
   Qed.
+
+
+
+  (* Soundness helper lemmas *)
+
+  Local Lemma sound_class_list_forall_aux {A : Type}
+                                   `{Serialize A}
+                                   `{Deserialize A}
+                                    (es : list sexp) :
+    forall xs n l a,
+      Forall (fun e => forall l' t, _from_sexp l' e = inr t -> to_sexp t = e) es ->
+      _sexp_to_list _from_sexp xs n l es = inr a ->
+      map to_sexp a = (map to_sexp (rev xs) ++ es).
+  Proof.
+    induction es as [| e es IH].
+    - (* nil *)
+      intros xs n l ts Hall Hdes.
+      cbn in Hdes.
+      injection Hdes as <-.
+      rewrite rev_alt.
+      rewrite app_nil_r.
+      reflexivity.
+    - (* cons *)
+      intros xs n l ts Hall Hdes.
+      cbn in Hdes.
+      destruct (_from_sexp _ e) as [? | t] eqn:Hdes_e; try discriminate.
+      inversion Hall as [|e' es' He Hes' Heq1]; subst.
+      apply IH in Hdes; auto.
+      rewrite Hdes; cbn.
+      rewrite map_app; cbn.
+      erewrite He; eauto.
+      rewrite <- app_assoc; cbn.
+      reflexivity.
+  Qed.
+
+  Lemma sound_class_list_forall {A : Type}
+                               `{Serialize A}
+                               `{Deserialize A}
+                                (es : list sexp) :
+    forall l xs,
+      Forall (fun e => forall l' t, _from_sexp l' e = inr t -> to_sexp t = e) es ->
+      _sexp_to_list _from_sexp nil 0 l es = inr xs ->
+      map to_sexp xs = es.
+  Proof.
+    intros.
+    erewrite sound_class_list_forall_aux; eauto.
+    cbn.
+    reflexivity.
+  Qed.
 End StrongSound.
