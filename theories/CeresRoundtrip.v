@@ -662,3 +662,46 @@ Proof.
   unfold to_sexp, Serialize_prim_float.
   rewrite FloatAxioms.Prim2SF_SF2Prim; auto.
 Qed.
+
+Module StrongSound.
+
+  (* Strong soundness *)
+
+  Inductive SoundClassStrong (P : sexp -> Prop) : sexp -> Prop :=
+  | SoundAtom : forall a,
+      P (Atom a) ->
+      SoundClassStrong P (Atom a)
+  | SoundList : forall es,
+      P (List es) ->
+      Forall (SoundClassStrong P) es ->
+      SoundClassStrong P (List es).
+
+  Lemma SoundClassStrong_implies_P {P : sexp -> Prop} :
+    forall e,
+      SoundClassStrong P e -> P e.
+  Proof.
+    intros e Hss.
+    inversion Hss; auto.
+  Qed.
+
+  Lemma SoundClassStrong_List_inv {P : sexp -> Prop} :
+    forall es,
+      SoundClassStrong P (List es) ->
+        Forall (SoundClassStrong P) es.
+  Proof.
+    intros es Hss.
+    inversion Hss; auto.
+  Qed.
+
+  Lemma Forall_SoundClassStrong_Forall_P {P : sexp -> Prop} :
+    forall es,
+      Forall (SoundClassStrong P) es ->
+        Forall P es.
+  Proof.
+    intros es Hss.
+    induction Hss as [| e es' Hss_e Hss_es' IH]; constructor.
+    - apply SoundClassStrong_implies_P.
+      assumption.
+    - assumption.
+  Qed.
+End StrongSound.
