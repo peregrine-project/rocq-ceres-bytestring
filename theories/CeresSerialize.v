@@ -5,6 +5,7 @@ From Stdlib Require Import
   List
   ZArith
   Strings.Byte.
+From Stdlib Require Uint63 Sint63 SpecFloat PrimFloat FloatOps.
 From MetaRocq.Utils Require Import bytestring.
 
 From CeresBS Require Import
@@ -80,8 +81,48 @@ Instance Serialize_byte : Serialize byte
   := fun a => Atom (Str (String.String a ""%bs)).
 
 Global
+Instance Serialize_ascii : Serialize Ascii.ascii
+  := fun a => Atom (Str (String.String (Ascii.byte_of_ascii a) ""%bs)).
+
+Global
 Instance Serialize_string : Serialize string
   := fun s => Atom (Str s).
+
+Global
+Instance Serialize_coq_string : Serialize String.string
+  := fun s => Atom (Str (String.of_string s)).
+
+Global
+Instance Serialize_comparison : Serialize comparison
+  := fun c =>
+    match c with
+    | Eq => Atom "Eq"
+    | Lt => Atom "Lt"
+    | Gt => Atom "Gt"
+    end%bs.
+
+Global
+Instance Integral_uint : Integral PrimInt63.int := Uint63.to_Z.
+
+Global
+Instance Integral_sint : Integral PrimInt63.int := Sint63.to_Z.
+
+Global
+Instance Integral_positive : Integral positive := Zpos.
+
+Global
+Instance Serialize_spec_float : Serialize SpecFloat.spec_float :=
+  fun f =>
+    match f with
+    | SpecFloat.S754_zero s => [ Atom "S754_zero"; to_sexp s ]%sexp
+    | SpecFloat.S754_infinity s => [ Atom "S754_infinity"; to_sexp s ]%sexp
+    | SpecFloat.S754_nan => Atom "S754_nan"
+    | SpecFloat.S754_finite s m e => [ Atom "S754_finite"; to_sexp s; to_sexp m; to_sexp e ]%sexp
+    end%bs.
+
+Global
+Instance Serialize_prim_float : Serialize PrimFloat.float :=
+  fun f => to_sexp (FloatOps.Prim2SF f).
 
 Global
 Instance Serialize_list {A} `{Serialize A} : Serialize (list A)

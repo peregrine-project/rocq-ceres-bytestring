@@ -128,6 +128,21 @@ Ltac match_byte :=
       destruct (eqb_eq_byte' x y)
     end.
 
+Lemma eqb_byte_refl : forall c,
+  CeresString.eqb_byte c c = true.
+Proof.
+  intros c.
+  destruct c; reflexivity.
+Qed.
+
+Lemma neqb_byte_neq : forall a b,
+  a <> b -> CeresString.eqb_byte a b = false.
+Proof.
+  intros.
+  apply CeresString.neqb_neq_byte.
+  assumption.
+Qed.
+
 Fixpoint eqb_string s1 s2 : bool :=
   match s1, s2 with
   | String.EmptyString, String.EmptyString => true

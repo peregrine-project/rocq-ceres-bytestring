@@ -3,10 +3,12 @@ From Stdlib Require Import
   ZArith
   List
   Strings.Byte.
+From Stdlib Require Uint63 Sint63 SpecFloat PrimFloat FloatOps FloatAxioms.
 From MetaRocq.Utils Require Import bytestring.
 From CeresBS Require Import
   CeresUtils
   CeresS
+  CeresString
   CeresSerialize
   CeresDeserialize.
 
@@ -350,6 +352,48 @@ Proof.
   intros ? E; injection E; intros []; reflexivity.
 Qed.
 
+
+Lemma bytestring_sound : forall s,
+  bytestring.String.of_string (bytestring.String.to_string s) = s.
+Proof.
+  induction s.
+  - reflexivity.
+  - cbn.
+    rewrite IHs.
+    rewrite Ascii.byte_of_ascii_of_byte.
+    reflexivity.
+Qed.
+
+Lemma bytestring_complete : forall s,
+  bytestring.String.to_string (bytestring.String.of_string s) = s.
+Proof.
+  induction s.
+  - reflexivity.
+  - cbn.
+    rewrite IHs.
+    rewrite Ascii.ascii_of_byte_of_ascii.
+    reflexivity.
+Qed.
+
+Global
+Instance CompleteClass_coq_string : CompleteClass String.string.
+Proof.
+  intros l a.
+  cbn.
+  rewrite bytestring_complete.
+  reflexivity.
+Qed.
+
+Global
+Instance SoundClass_coq_string : SoundClass String.string.
+Proof.
+  intros l [ [] | ]; cbn; try discriminate.
+  intros ? E; injection E; intros [].
+  unfold to_sexp, Serialize_coq_string.
+  rewrite bytestring_sound.
+  reflexivity.
+Qed.
+
 Global
 Instance CompleteClass_byte : CompleteClass byte.
 Proof.
@@ -362,4 +406,259 @@ Proof.
   intros l [ [ | s | ] | ]; cbn; try discriminate.
   destruct s as [ | ? [] ]; cbn; try discriminate.
   intros ? E; injection E; intros []; reflexivity.
+Qed.
+
+Global
+Instance Complete_unit : @CompleteClass unit Serialize_unit Deserialize_unit.
+Proof.
+  unfold CompleteClass, Complete.
+  intros l o.
+  cbn.
+  destruct o.
+  reflexivity.
+Qed.
+
+Global
+Instance Sound_unit : @SoundClass unit Serialize_unit Deserialize_unit.
+Proof.
+  unfold SoundClass, Sound.
+  intros l e a He.
+  unfold to_sexp, Serialize_unit.
+  unfold _from_sexp, Deserialize_unit in He.
+  destruct e; try discriminate.
+  destruct a0; try discriminate.
+  destruct s; try discriminate.
+  destruct b; try discriminate.
+  destruct s; try discriminate.
+  destruct b; try discriminate.
+  destruct s; try discriminate.
+  reflexivity.
+Qed.
+
+Global
+Instance CompleteClass_ascii : CompleteClass Ascii.ascii.
+Proof.
+  intros l a.
+  cbn.
+  rewrite Ascii.ascii_of_byte_of_ascii.
+  reflexivity.
+Qed.
+
+Global
+Instance SoundClass_ascii : SoundClass Ascii.ascii.
+Proof.
+  intros l [ [ | s | ] | ]; cbn; try discriminate.
+  destruct s as [ | ? [] ]; cbn; try discriminate.
+  intros ? E; injection E; intros [].
+  unfold to_sexp, Serialize_ascii.
+  rewrite Ascii.byte_of_ascii_of_byte.
+  reflexivity.
+Qed.
+
+Global
+Instance CompleteClass_Empty_set : CompleteClass Empty_set.
+Proof.
+  intros l v.
+  destruct v.
+Qed.
+
+Global
+Instance SoundClass_Empty_set : SoundClass Empty_set.
+Proof.
+  intros l s v.
+  destruct v.
+Qed.
+
+Global
+Instance CompleteClass_comparison : CompleteClass comparison.
+Proof.
+  unfold CompleteClass, Complete.
+  intros l []; reflexivity.
+Qed.
+
+Global
+Instance SoundClass_comparison : SoundClass comparison.
+Proof.
+  intros l e a Ee; apply sound_match_con in Ee.
+  destruct Ee as [ Ee | Ee ]; elim_Exists Ee;
+    destruct Ee as [Eatom Ea]; subst; try reflexivity.
+Qed.
+
+Global
+Instance Complete_sint : @CompleteIntegral PrimInt63.int Integral_sint SemiIntegral_sint.
+Proof.
+  intros a. unfold from_Z, SemiIntegral_sint.
+  unfold to_Z, Integral_sint.
+  destruct andb eqn:H.
+  - apply Bool.andb_true_iff in H as [H1 H2].
+    apply Z.leb_le in H1.
+    apply Z.leb_le in H2.
+    rewrite Sint63.of_to_Z.
+    reflexivity.
+  - apply Bool.andb_false_iff in H as [H | H].
+    + apply Z.leb_nle in H.
+      specialize (Sint63.to_Z_bounded a) as H1.
+      destruct H1 as [H1 _].
+      contradiction.
+    + apply Z.leb_nle in H.
+      specialize (Sint63.to_Z_bounded a) as H1.
+      destruct H1 as [_ H1].
+      contradiction.
+Qed.
+
+Global
+Instance Complete_uint : @CompleteIntegral PrimInt63.int Integral_uint SemiIntegral_uint.
+Proof.
+  intros a. unfold from_Z, SemiIntegral_uint.
+  unfold to_Z, Integral_uint.
+  destruct andb eqn:H.
+  - apply Bool.andb_true_iff in H as [H1 H2].
+    apply Z.leb_le in H1.
+    apply Z.ltb_lt in H2.
+    rewrite Uint63.of_to_Z.
+    reflexivity.
+  - apply Bool.andb_false_iff in H as [H | H].
+    + apply Z.leb_nle in H.
+      specialize (Uint63.to_Z_rec_bounded Uint63.size a) as H1.
+      destruct H1 as [H1 _].
+      contradiction.
+    + apply Z.ltb_nlt in H.
+      specialize (Uint63.to_Z_rec_bounded Uint63.size a) as H1.
+      destruct H1 as [_ H1].
+      assert (H0 : Uint63Axioms.to_Z Uint63Axioms.digits = Z.of_nat Uint63Axioms.size).
+      { reflexivity. }
+      rewrite H0 in *; clear H0.
+      contradiction.
+Qed.
+
+Global
+Instance Sound_sint : @SoundIntegral PrimInt63.int Integral_sint SemiIntegral_sint.
+Proof.
+  intros z n. unfold from_Z, SemiIntegral_sint.
+  destruct andb eqn:H.
+  - intros E; injection E as <-.
+    apply Bool.andb_true_iff in H as [H1 H2].
+    apply Z.leb_le in H1.
+    apply Z.leb_le in H2.
+    rewrite <- Sint63.is_int.
+    reflexivity.
+    split; assumption.
+  - intros. discriminate.
+Qed.
+
+Global
+Instance Sound_uint : @SoundIntegral PrimInt63.int Integral_uint SemiIntegral_uint.
+Proof.
+  intros z n. unfold from_Z, SemiIntegral_uint.
+  destruct andb eqn:H.
+  - intros E; injection E as <-.
+    apply Bool.andb_true_iff in H as [H1 H2].
+    apply Z.leb_le in H1.
+    apply Z.ltb_lt in H2.
+    rewrite <- Uint63.is_int.
+    reflexivity.
+    split; assumption.
+  - intros. discriminate.
+Qed.
+
+Global
+Instance Complete_positive : CompleteIntegral positive.
+Proof.
+  intros a. unfold from_Z, SemiIntegral_positive.
+  unfold to_Z, Integral_positive.
+  replace (Z.leb _ _) with false.
+  - cbn. reflexivity.
+  - symmetry.
+    exact Zone_pos.
+Qed.
+
+Global
+Instance Sound_positive : SoundIntegral positive.
+Proof.
+  intros z n. unfold from_Z, SemiIntegral_positive.
+  destruct (Z.leb_spec z 0); try discriminate.
+  intros E; injection E as <-.
+  unfold to_Z, Integral_positive.
+  rewrite Z2Pos.id by assumption.
+  reflexivity.
+Qed.
+
+Global
+Instance CompleteClass_spec_float : CompleteClass SpecFloat.spec_float.
+Proof.
+  unfold CompleteClass, Complete.
+  intros l [];
+    unfold _from_sexp; cbn -[_from_sexp].
+  - rewrite !eqb_byte_refl.
+    rewrite complete_class.
+    reflexivity.
+  - rewrite !eqb_byte_refl.
+    rewrite !neqb_byte_neq by congruence.
+    rewrite complete_class.
+    reflexivity.
+  - cbn.
+    rewrite !eqb_byte_refl.
+    reflexivity.
+  - rewrite !eqb_byte_refl.
+    rewrite !neqb_byte_neq by congruence.
+    rewrite !complete_class.
+    reflexivity.
+Qed.
+
+Global
+Instance SoundClass_spec_float : SoundClass SpecFloat.spec_float.
+Proof.
+  intros l e a Ee; apply sound_match_con in Ee.
+  destruct Ee as [ Ee | Ee ]; elim_Exists Ee; cbn [fst snd] in *.
+  - destruct Ee as [E1 E2]; subst; reflexivity.
+  - destruct Ee as [es [<- Ea]].
+    sound_field Ea.
+    apply sound_class in Ea1.
+    cbn.
+    rewrite Ea1.
+    reflexivity.
+  - destruct Ee as [es [<- Ea]].
+    sound_field Ea.
+    apply sound_class in Ea1.
+    cbn.
+    rewrite Ea1.
+    reflexivity.
+  - destruct Ee as [es [<- Ea]].
+    sound_field Ea.
+    apply sound_class in Ea0.
+    apply sound_class in Ea1.
+    apply sound_class in Ea2.
+    cbn.
+    rewrite Ea0.
+    rewrite Ea1.
+    rewrite Ea2.
+    reflexivity.
+Qed.
+
+Global
+Instance CompleteClass_prim_float : CompleteClass PrimFloat.float.
+Proof.
+  unfold CompleteClass, Complete.
+  intros.
+  unfold _from_sexp, Deserialize_prim_float.
+  specialize CompleteClass_spec_float as H.
+  unfold CompleteClass, Complete, _from_sexp in H.
+  unfold to_sexp, Serialize_prim_float.
+  rewrite H.
+  rewrite FloatAxioms.Prim2SF_valid.
+  rewrite FloatAxioms.SF2Prim_Prim2SF.
+  reflexivity.
+Qed.
+
+Global
+Instance SoundClass_prim_float : SoundClass PrimFloat.float.
+Proof.
+  intros l e a Ee.
+  unfold _from_sexp, Deserialize_prim_float in Ee.
+  destruct Deserialize_spec_float eqn:H in Ee; try discriminate.
+  apply sound_class in H.
+  destruct SpecFloat.valid_binary eqn:Hvalid in Ee; try discriminate.
+  injection Ee as <-.
+  unfold to_sexp, Serialize_prim_float.
+  rewrite FloatAxioms.Prim2SF_SF2Prim; auto.
 Qed.
