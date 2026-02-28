@@ -353,7 +353,7 @@ Proof.
 Qed.
 
 
-Lemma bytestring_sound : forall s,
+Lemma bytestring_of_to : forall s,
   bytestring.String.of_string (bytestring.String.to_string s) = s.
 Proof.
   induction s.
@@ -364,7 +364,7 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma bytestring_complete : forall s,
+Lemma bytestring_to_of : forall s,
   bytestring.String.to_string (bytestring.String.of_string s) = s.
 Proof.
   induction s.
@@ -380,7 +380,7 @@ Instance CompleteClass_coq_string : CompleteClass String.string.
 Proof.
   intros l a.
   cbn.
-  rewrite bytestring_complete.
+  rewrite bytestring_to_of.
   reflexivity.
 Qed.
 
@@ -390,7 +390,7 @@ Proof.
   intros l [ [] | ]; cbn; try discriminate.
   intros ? E; injection E; intros [].
   unfold to_sexp, Serialize_coq_string.
-  rewrite bytestring_sound.
+  rewrite bytestring_of_to.
   reflexivity.
 Qed.
 
@@ -583,24 +583,32 @@ Proof.
   reflexivity.
 Qed.
 
+Ltac simpl_byte :=
+  match goal with
+  | [ |- context E [ CeresString.eqb_byte ?x ?x ] ] => rewrite eqb_byte_refl
+  | [ |- context E [ CeresString.eqb_byte ?x ?y ] ] => rewrite neqb_byte_neq by congruence
+  end.
+
+Ltac simpl_bytes :=
+  repeat simpl_byte.
+
+
 Global
 Instance CompleteClass_spec_float : CompleteClass SpecFloat.spec_float.
 Proof.
   unfold CompleteClass, Complete.
   intros l [];
     unfold _from_sexp; cbn -[_from_sexp].
-  - rewrite !eqb_byte_refl.
+  - simpl_bytes.
     rewrite complete_class.
     reflexivity.
-  - rewrite !eqb_byte_refl.
-    rewrite !neqb_byte_neq by congruence.
+  - simpl_bytes.
     rewrite complete_class.
     reflexivity.
   - cbn.
-    rewrite !eqb_byte_refl.
+    simpl_bytes.
     reflexivity.
-  - rewrite !eqb_byte_refl.
-    rewrite !neqb_byte_neq by congruence.
+  - simpl_bytes.
     rewrite !complete_class.
     reflexivity.
 Qed.
@@ -755,8 +763,8 @@ Module StrongSound.
   Qed.
 
   Lemma sound_class_list_strong {A : Type}
-        `{Serialize A}
-        `{Deserialize A}
+       `{Serialize A}
+       `{Deserialize A}
         (P : sexp -> Prop)
         (HP : forall e, P e -> forall l' t, _from_sexp l' e = inr t -> to_sexp t = e) :
     forall es,
