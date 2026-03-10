@@ -5,13 +5,13 @@
 
 (generate_opam_files true)
 
-(source (github Lysxia/coq-ceres))
+(source (github peregrine-project/rocq-ceres-bytestring))
 (license MIT)
 (authors "Li-yao Xia")
-(maintainers "lysxia@gmail.com")
+(maintainers "The Peregrine team")
 
 (package
  (name rocq-ceres-bytestring)
- (synopsis "Library for serialization via S-expressions")
+ (synopsis "Library for serialization via S-expressions using bytestrings")
  (depends (coq (>= 9.0~)) (rocq-metarocq-utils (>= 1.4~)))
 )

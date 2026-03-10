@@ -1,6 +1,8 @@
-# Cérès [![CircleCI](https://circleci.com/gh/Lysxia/coq-ceres.svg?style=shield)](https://circleci.com/gh/Lysxia/coq-ceres)
+# Cérès-bytestring
 
-Cérès is a Coq library for serialization to S-expressions.
+[Cérès](https://github.com/Lysxia/coq-ceres) is a Coq library for serialization to S-expressions.
+Fork of [Cérès](https://github.com/Lysxia/coq-ceres), using MetaRocq byte string representation.
+
 
 S-expressions
 -------------

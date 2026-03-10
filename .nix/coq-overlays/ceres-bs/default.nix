@@ -28,7 +28,7 @@ mkCoqDerivation {
   propagatedBuildInputs = [ coq.ocamlPackages.findlib stdlib metarocq ];
 
   meta = {
-    description = "Library for serialization to S-expressions";
+    description = "Library for serialization to S-expressions using bytestrings";
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [ _4ever2 ];
   };
